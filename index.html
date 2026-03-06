@@ -3,163 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sandro Penner — personal site, projects, and contact.">
   <title>Sandro Penner</title>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      height: 100%;
-      background: #000;
-    }
-
-    .sky {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      background: radial-gradient(circle at 5% 150%, #010d37 0%, #000000 50%);
-    }
-
-    #stars {
-      width: 100%;
-      height: 100%;
-      background: transparent;
-    }
-
-    .star {
-      position: absolute;
-      width: 2px;
-      height: 2px;
-      background: white;
-      border-radius: 50%;
-      animation: twinkle 2s infinite;
-    }
-
-    .star:before, .star:after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 6px rgba(255, 255, 255, 0.5),
-                  0 0 12px rgba(255, 255, 255, 0.3),
-                  0 0 18px rgba(255, 255, 255, 0.2),
-                  0 0 24px rgba(255, 255, 255, 0.1);
-    }
-
-    @keyframes twinkle {
-      0%, 100% { opacity: 0.2; }
-      50% { opacity: 1; }
-    }
-
-    #shooting-stars {
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      overflow: hidden;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    .shooting-star {
-      position: absolute;
-      width: 2px;
-      height: 90px; /* Length of the streak */
-      background: linear-gradient(to bottom, white, rgba(255, 255, 255, 0));
-      transform: rotate(135deg); /* Adjust this angle for the desired trajectory */
-      animation: shoot 3s ease-out infinite;
-    }
-
-    @keyframes shoot {
-      0% {
-        transform: translateX(0) translateY(0) rotate(135deg) scale(1);
-        opacity: 1;
-      }
-      50% {
-        opacity: 1;
-      }
-      100% {
-        transform: translateX(800px) translateY(600px) rotate(135deg) scale(0);
-        opacity: 0;
-      }
-    }
-
-    .center-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 3vw; /* Responsive font size */
-      font-weight: bold;
-      text-align: center;
-      white-space: nowrap;
-      z-index: 10; /* Ensure text is above stars */
-    }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="sky">
-    <div id="stars"></div>
-    <div id="shooting-stars"></div>
-    <div class="center-text">SANDRO PENNER</div>
-  </div>
-  <script>
-    const createStar = () => {
-      const star = document.createElement('div');
-      star.classList.add('star');
-      const size = Math.random() * 2;
-      const opacity = Math.random();
-      star.style.width = `${size}px`;
-      star.style.height = `${size}px`;
-      star.style.top = `${Math.random() * 100}vh`;
-      star.style.left = `${Math.random() * 100}vw`;
-      star.style.opacity = opacity;
+  <canvas id="starfield" aria-hidden="true"></canvas>
 
-      document.getElementById('stars').appendChild(star);
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="#top">SP</a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="#about">About</a>
+        <a href="#projects">Projects</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
 
-      setTimeout(() => {
-        star.remove();
-      }, 1500);
-    };
+  <main id="top">
+    <section class="hero container">
+      <p class="eyebrow">Personal site</p>
+      <h1>Sandro Penner</h1>
+      <p class="hero-copy">
+        Clean builds, weird ideas, and a fondness for making stuff feel better than it has any right to.
+      </p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#projects">See projects</a>
+        <a class="button button-secondary" href="#contact">Get in touch</a>
+      </div>
+    </section>
 
-    const createShootingStar = () => {
-      const shootingStar = document.createElement('div');
-      shootingStar.classList.add('shooting-star');
-      shootingStar.style.top = `${Math.random() * 100}vh`;
-      shootingStar.style.left = `${Math.random() * 100}vw`;
-      document.getElementById('shooting-stars').appendChild(shootingStar);
+    <section id="about" class="panel container">
+      <div class="section-heading">
+        <p class="eyebrow">About</p>
+        <h2>Less placeholder. More point.</h2>
+      </div>
+      <div class="grid two-col">
+        <p>
+          The old version had a cool vibe, but it was basically a title floating in space with enough animation to make your CPU file a complaint.
+          This version keeps the night-sky mood while giving the site actual structure, readable content, and sane performance.
+        </p>
+        <ul class="feature-list">
+          <li>Semantic layout that’s easier to maintain</li>
+          <li>Reusable CSS instead of one giant inline blob</li>
+          <li>Canvas-based starfield instead of constant DOM churn</li>
+          <li>Accessible navigation, spacing, and mobile behavior</li>
+        </ul>
+      </div>
+    </section>
 
-      const checkRemoval = () => {
-        const rect = shootingStar.getBoundingClientRect();
-        const opacity = parseFloat(window.getComputedStyle(shootingStar).opacity);
+    <section id="projects" class="panel container">
+      <div class="section-heading">
+        <p class="eyebrow">Projects</p>
+        <h2>A place for the good stuff</h2>
+      </div>
+      <div class="card-grid">
+        <article class="card">
+          <h3>Project One</h3>
+          <p>Swap this with an actual project. The card structure is ready when your content stops being a cryptid.</p>
+          <a href="#contact">Ask about it</a>
+        </article>
+        <article class="card">
+          <h3>Project Two</h3>
+          <p>Use these for portfolio work, experiments, or links to things you’re building in public.</p>
+          <a href="#contact">Start here</a>
+        </article>
+        <article class="card">
+          <h3>Project Three</h3>
+          <p>Keep the copy short. Let the visuals and links do the lifting instead of dumping a wall of text.</p>
+          <a href="#contact">Reach out</a>
+        </article>
+      </div>
+    </section>
 
-        if (
-          rect.top > window.innerHeight ||
-          rect.left > window.innerWidth ||
-          rect.bottom < 0 ||
-          rect.right < 0 ||
-          opacity === 0
-        ) {
-          shootingStar.remove();
-        } else {
-          requestAnimationFrame(checkRemoval);
-        }
-      };
+    <section id="contact" class="panel container contact-panel">
+      <div class="section-heading">
+        <p class="eyebrow">Contact</p>
+        <h2>Let’s make it less jank</h2>
+      </div>
+      <p>
+        Replace this with your email, socials, or a real form endpoint. Right now it uses a mail link so it actually works without pretending.
+      </p>
+      <a class="button button-primary" href="mailto:hello@sandropenner.com">hello@sandropenner.com</a>
+    </section>
+  </main>
 
-      checkRemoval();
-    };
+  <footer class="site-footer">
+    <div class="container footer-wrap">
+      <p>© <span id="year"></span> Sandro Penner</p>
+      <a href="#top">Back to top</a>
+    </div>
+  </footer>
 
-    const init = () => {
-      setInterval(createStar, 20);
-      setInterval(createShootingStar, 3000);
-    };
-
-    window.onload = init;
-  </script>
+  <script src="scripts.js"></script>
 </body>
 </html>
