@@ -3,99 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sandro Penner — personal site, projects, and contact.">
   <title>Sandro Penner</title>
+  <meta name="description" content="Sandro Penner — personal site, experiments, and projects built from weird ideas, questionable execution, and surprisingly usable results.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-page="home">
   <canvas id="starfield" aria-hidden="true"></canvas>
 
   <header class="site-header">
     <div class="container nav-wrap">
-      <a class="brand" href="#top">SP</a>
+      <a class="brand" href="index.html" aria-label="Home">SP</a>
       <nav class="site-nav" aria-label="Primary navigation">
-        <a href="#about">About</a>
-        <a href="#projects">Projects</a>
+        <a href="index.html" aria-current="page">Home</a>
+        <a href="projects.html">Projects</a>
         <a href="#contact">Contact</a>
       </nav>
     </div>
   </header>
 
-  <main id="top">
+  <main>
     <section class="hero container">
-      <p class="eyebrow">Personal site</p>
-      <h1>Sandro Penner</h1>
-      <p class="hero-copy">
-        Clean builds, weird ideas, and a fondness for making stuff feel better than it has any right to.
-      </p>
-      <div class="hero-actions">
-        <a class="button button-primary" href="#projects">See projects</a>
-        <a class="button button-secondary" href="#contact">Get in touch</a>
-      </div>
-    </section>
-
-    <section id="about" class="panel container">
-      <div class="section-heading">
-        <p class="eyebrow">About</p>
-        <h2>Less placeholder. More point.</h2>
-      </div>
-      <div class="grid two-col">
-        <p>
-          The old version had a cool vibe, but it was basically a title floating in space with enough animation to make your CPU file a complaint.
-          This version keeps the night-sky mood while giving the site actual structure, readable content, and sane performance.
+      <div class="hero-copy-block">
+        <p class="eyebrow">Personal site</p>
+        <h1>Sandro Penner</h1>
+        <p class="hero-copy">
+          Weird ideas, questionable execution, and results that are somehow still usable.
         </p>
-        <ul class="feature-list">
-          <li>Semantic layout that’s easier to maintain</li>
-          <li>Reusable CSS instead of one giant inline blob</li>
-          <li>Canvas-based starfield instead of constant DOM churn</li>
-          <li>Accessible navigation, spacing, and mobile behavior</li>
+        <div class="hero-actions">
+          <a class="button button-primary" href="projects.html">See projects</a>
+          <a class="button button-secondary" href="#about">About me</a>
+        </div>
+      </div>
+
+      <aside class="hero-panel glass">
+        <p class="panel-label">Current operating mode</p>
+        <ul class="stat-list">
+          <li><span>Build style</span><strong>chaotic but committed</strong></li>
+          <li><span>Main skill</span><strong>fixing the mess until it works</strong></li>
+          <li><span>General outcome</span><strong>better than the process deserved</strong></li>
         </ul>
+      </aside>
+    </section>
+
+    <section id="about" class="container section-stack">
+      <div class="glass section-card">
+        <div class="section-heading">
+          <p class="eyebrow">About</p>
+          <h2>Polished goblin engineering.</h2>
+        </div>
+        <div class="two-col">
+          <p>
+            Most of what I build starts because something annoyed me, fascinated me, or both.
+            Then I take the most suspicious possible route to getting it working, clean it up afterward,
+            and act like that was a respectable process.
+          </p>
+          <p>
+            This site is where the keepers live: stuff built for real use, stuff built because I was obsessed,
+            and the occasional project that should have stayed a dumb idea but refused to die.
+          </p>
+        </div>
       </div>
     </section>
 
-    <section id="projects" class="panel container">
-      <div class="section-heading">
-        <p class="eyebrow">Projects</p>
-        <h2>A place for the good stuff</h2>
+    <section class="container section-stack">
+      <div class="section-heading compact">
+        <p class="eyebrow">Featured projects</p>
+        <h2>Stuff that survived contact with me.</h2>
       </div>
-      <div class="card-grid">
-        <article class="card">
-          <h3>Project One</h3>
-          <p>Swap this with an actual project. The card structure is ready when your content stops being a cryptid.</p>
-          <a href="#contact">Ask about it</a>
-        </article>
-        <article class="card">
-          <h3>Project Two</h3>
-          <p>Use these for portfolio work, experiments, or links to things you’re building in public.</p>
-          <a href="#contact">Start here</a>
-        </article>
-        <article class="card">
-          <h3>Project Three</h3>
-          <p>Keep the copy short. Let the visuals and links do the lifting instead of dumping a wall of text.</p>
-          <a href="#contact">Reach out</a>
-        </article>
+
+      <div class="project-preview-grid">
+        <a class="glass preview-card preview-feature" href="projects.html#chrometabber">
+          <span class="preview-tag">Used at work</span>
+          <h3>ChromeTabber</h3>
+          <p>
+            A Chrome extension I built because every tab carousel I tried kept reloading pages on switch.
+            I needed one that didn’t suck, so I made it.
+          </p>
+          <span class="preview-link">Open project</span>
+        </a>
+
+        <a class="glass preview-card" href="projects.html#snek-lab">
+          <span class="preview-tag">Playable now</span>
+          <h3>Snek Lab</h3>
+          <p>
+            My rebuild of classic Nokia Snake, now with a proper home on this site and an online leaderboard
+            so nostalgia can get competitive.
+          </p>
+          <span class="preview-link">Open project</span>
+        </a>
+
+        <a class="glass preview-card" href="projects.html#build-notes">
+          <span class="preview-tag">Build notes</span>
+          <h3>What got cleaned up</h3>
+          <p>
+            Home page, project page, contact links, and less mystery around where the hell things are hosted.
+          </p>
+          <span class="preview-link">Read notes</span>
+        </a>
       </div>
     </section>
 
-    <section id="contact" class="panel container contact-panel">
-      <div class="section-heading">
-        <p class="eyebrow">Contact</p>
-        <h2>Let’s make it less jank</h2>
+    <section id="contact" class="container section-stack anchor-offset">
+      <div class="glass section-card">
+        <div class="section-heading compact">
+          <p class="eyebrow">Contact</p>
+          <h2>Useful links and other responsible adult behavior.</h2>
+        </div>
+        <div class="contact-grid">
+          <a class="glass-inset contact-card" href="mailto:sandropenner+support@gmail.com">
+            <span class="preview-tag">Email</span>
+            <h3>sandropenner+support@gmail.com</h3>
+            <p>For questions, collaboration, bug reports, or politely worded chaos.</p>
+          </a>
+          <a class="glass-inset contact-card" href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer">
+            <span class="preview-tag">Chrome Web Store</span>
+            <h3>ChromeTabber</h3>
+            <p>Live extension listing for the tab rotator that finally stopped reloading pages like an idiot.</p>
+          </a>
+        </div>
       </div>
-      <p>
-        Replace this with your email, socials, or a real form endpoint. Right now it uses a mail link so it actually works without pretending.
-      </p>
-      <a class="button button-primary" href="mailto:hello@sandropenner.com">hello@sandropenner.com</a>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="container footer-wrap">
       <p>© <span id="year"></span> Sandro Penner</p>
-      <a href="#top">Back to top</a>
+      <div class="footer-links">
+        <a href="projects.html">Projects</a>
+        <a href="mailto:sandropenner+support@gmail.com">Email</a>
+      </div>
     </div>
   </footer>
 
