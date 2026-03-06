@@ -1,0 +1,33 @@
+<svg width="1200" height="750" viewBox="0 0 1200 750" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="750" rx="48" fill="#09101F"/>
+  <circle cx="150" cy="130" r="220" fill="url(#a)" fill-opacity="0.35"/>
+  <circle cx="1040" cy="120" r="190" fill="url(#b)" fill-opacity="0.25"/>
+  <rect x="94" y="112" width="1012" height="530" rx="28" fill="#0F172D" stroke="#FFFFFF" stroke-opacity="0.12"/>
+  <rect x="94" y="112" width="1012" height="76" rx="28" fill="#111B34"/>
+  <circle cx="140" cy="150" r="10" fill="#FF738F"/>
+  <circle cx="172" cy="150" r="10" fill="#FFCC67"/>
+  <circle cx="204" cy="150" r="10" fill="#89FFB0"/>
+  <rect x="250" y="132" width="172" height="36" rx="18" fill="#182541"/>
+  <rect x="436" y="132" width="172" height="36" rx="18" fill="#22345D" stroke="#8FB2FF" stroke-opacity="0.55"/>
+  <rect x="622" y="132" width="172" height="36" rx="18" fill="#182541"/>
+  <rect x="180" y="236" width="840" height="110" rx="26" fill="#101A31" stroke="#1E2F53"/>
+  <rect x="180" y="382" width="840" height="110" rx="26" fill="#101A31" stroke="#1E2F53"/>
+  <rect x="180" y="528" width="420" height="44" rx="22" fill="#182541"/>
+  <rect x="620" y="528" width="220" height="44" rx="22" fill="#182541"/>
+  <rect x="860" y="528" width="160" height="44" rx="22" fill="#8FB2FF" fill-opacity="0.18" stroke="#8FB2FF" stroke-opacity="0.45"/>
+  <text x="220" y="282" fill="#EEF2FF" font-family="Arial, sans-serif" font-size="34" font-weight="700">ChromeTabber</text>
+  <text x="220" y="426" fill="#A8B6D8" font-family="Arial, sans-serif" font-size="30">Rotate tabs without the stupid page reloads.</text>
+  <text x="220" y="600" fill="#70E1FF" font-family="Arial, sans-serif" font-size="26" font-weight="700">Keeps pages alive</text>
+  <rect x="862" y="252" width="130" height="74" rx="18" fill="#89FFB0" fill-opacity="0.16" stroke="#89FFB0" stroke-opacity="0.45"/>
+  <text x="896" y="297" fill="#D9FFE6" font-family="Arial, sans-serif" font-size="26" font-weight="700">LIVE</text>
+  <defs>
+    <radialGradient id="a" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(150 130) rotate(90) scale(220)">
+      <stop stop-color="#2F5AFF"/>
+      <stop offset="1" stop-color="#2F5AFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1040 120) rotate(90) scale(190)">
+      <stop stop-color="#70E1FF"/>
+      <stop offset="1" stop-color="#70E1FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Sandro Penner</title>
+  <meta name="description" content="Useful ways to contact Sandro Penner without pretending this is a corporate brochure.">
+  <meta property="og:title" content="Contact — Sandro Penner">
+  <meta property="og:description" content="Useful ways to contact Sandro Penner without pretending this is a corporate brochure.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sandropenner.com/contact.html">
+  <meta property="og:image" content="https://sandropenner.com/og-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Contact — Sandro Penner">
+  <meta name="twitter:description" content="Useful ways to contact Sandro Penner without pretending this is a corporate brochure.">
+  <meta name="twitter:image" content="https://sandropenner.com/og-preview.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="contact">
+  <canvas id="starfield" aria-hidden="true"></canvas>
+
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html" aria-label="Home">SP</a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="index.html">Home</a>
+        <div class="nav-item nav-item-menu">
+          <a href="projects.html">Projects <span class="nav-caret">▾</span></a>
+          <div class="nav-submenu glass" role="menu" aria-label="Project links">
+            <a href="projects.html" role="menuitem">All projects</a>
+            <a href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer" role="menuitem">ChromeTabber ↗</a>
+            <a href="snek.html" role="menuitem">Snek</a>
+          </div>
+        </div>
+        <a href="contact.html" aria-current="page">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="container page-intro compact-intro">
+      <p class="eyebrow">Contact</p>
+      <h1>Ways to reach the goblin.</h1>
+      <p class="hero-copy narrow">
+        This does not need a contact form. Email works. The extension listing exists. Life goes on.
+      </p>
+    </section>
+
+    <section class="container section-stack">
+      <div class="contact-grid single-focus">
+        <a class="glass-inset contact-card" href="mailto:sandropenner+support@gmail.com">
+          <span class="preview-tag">Email</span>
+          <h2>sandropenner+support@gmail.com</h2>
+          <p>Questions, bugs, weird ideas, or general communication that somehow seemed worth sending.</p>
+        </a>
+
+        <a class="glass-inset contact-card" href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer">
+          <span class="preview-tag">Extension</span>
+          <h2>ChromeTabber</h2>
+          <p>The live Chrome Web Store listing if you want to grab the extension or verify that yes, this thing is real.</p>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-wrap">
+      <p>© <span id="year"></span> Sandro Penner</p>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="projects.html">Projects</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="scripts.js"></script>
+</body>
+</html>

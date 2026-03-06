@@ -4,7 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Projects — Sandro Penner</title>
-  <meta name="description" content="Projects by Sandro Penner, including ChromeTabber and a rebuilt snake game with an online leaderboard.">
+  <meta name="description" content="The small collection of things that survived long enough to get their own page or tab.">
+  <meta property="og:title" content="Projects — Sandro Penner">
+  <meta property="og:description" content="The small collection of things that survived long enough to get their own page or tab.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sandropenner.com/projects.html">
+  <meta property="og:image" content="https://sandropenner.com/og-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Projects — Sandro Penner">
+  <meta name="twitter:description" content="The small collection of things that survived long enough to get their own page or tab.">
+  <meta name="twitter:image" content="https://sandropenner.com/og-preview.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -18,8 +27,15 @@
       <a class="brand" href="index.html" aria-label="Home">SP</a>
       <nav class="site-nav" aria-label="Primary navigation">
         <a href="index.html">Home</a>
-        <a href="projects.html" aria-current="page">Projects</a>
-        <a href="#contact">Contact</a>
+        <div class="nav-item nav-item-menu">
+          <a href="projects.html" aria-current="page">Projects <span class="nav-caret">▾</span></a>
+          <div class="nav-submenu glass" role="menu" aria-label="Project links">
+            <a href="projects.html" role="menuitem">All projects</a>
+            <a href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer" role="menuitem">ChromeTabber ↗</a>
+            <a href="snek.html" role="menuitem">Snek</a>
+          </div>
+        </div>
+        <a href="contact.html">Contact</a>
       </nav>
     </div>
   </header>
@@ -27,183 +43,54 @@
   <main class="projects-main">
     <section class="container page-intro">
       <p class="eyebrow">Projects</p>
-      <h1>Things I built instead of being normal.</h1>
+      <h1>A tiny shelf of usable nonsense.</h1>
       <p class="hero-copy narrow">
-        The homepage does the clean handshake. This page is where the actual projects live,
-        including the work problem I turned into an extension and the snake game I rebuilt because my brain never moved on from Nokia.
+        Cleaner layout, less page clutter. Click the extension to go out to the Chrome Web Store.
+        Click Snek to go one layer deeper and actually play the thing.
       </p>
     </section>
 
-    <section id="chrometabber" class="container section-stack anchor-offset">
-      <div class="glass project-shell">
-        <div class="project-meta">
-          <div>
-            <p class="eyebrow">Project</p>
+    <section class="container section-stack">
+      <div class="project-portal-grid">
+        <a class="glass portal-card portal-external" href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer">
+          <div class="portal-art frame-art large-art">
+            <img src="chrometabber-preview.svg" alt="Stylized preview of ChromeTabber in a browser window.">
+          </div>
+          <div class="portal-copy">
+            <span class="preview-tag">Chrome extension</span>
             <h2>ChromeTabber</h2>
-          </div>
-          <div class="pill-row">
-            <span class="pill">Chrome Extension</span>
-            <span class="pill">JavaScript</span>
-            <span class="pill">Work problem</span>
-          </div>
-        </div>
-
-        <div class="project-copy-grid">
-          <div class="glass-inset copy-card">
-            <p class="panel-label">What it is</p>
             <p>
-              A tab carousel extension built because every other option I tried kept reloading pages when switching tabs,
-              which made them useless for the thing I actually needed at work.
+              Built because all the tab carousel extensions I tried kept reloading pages when switching to them,
+              which made them useless for the thing I needed at work. So I made one that actually behaved and it ended up getting used there.
             </p>
+            <ul class="detail-list tight-list">
+              <li>solved a real problem instead of being demo wallpaper</li>
+              <li>keeps the rotation smooth without nuking page state</li>
+              <li>opens the actual Chrome Web Store listing</li>
+            </ul>
+            <span class="portal-link">Open Chrome Web Store ↗</span>
+          </div>
+        </a>
+
+        <a class="glass portal-card" href="snek.html">
+          <div class="portal-art frame-art large-art">
+            <img src="snek-preview.svg" alt="Stylized preview of the Snek board and leaderboard.">
+          </div>
+          <div class="portal-copy">
+            <span class="preview-tag">Playable game</span>
+            <h2>Snek</h2>
             <p>
-              So I made one that keeps the rotation smooth, keeps pages alive, and solved the real problem cleanly enough
-              that it ended up getting used where I work.
+              A rebuild of classic Nokia Snake because I’ve been obsessed with that stupid little game forever.
+              It’s now living here with an online leaderboard so nostalgia can get competitive for no good reason.
             </p>
-            <div class="hero-actions compact-actions">
-              <a class="button button-primary" href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer">Open listing</a>
-            </div>
+            <ul class="detail-list tight-list">
+              <li>dedicated game page instead of cluttering the projects shelf</li>
+              <li>keyboard and mobile controls</li>
+              <li>online leaderboard still wired in</li>
+            </ul>
+            <span class="portal-link">Enter Snek page</span>
           </div>
-
-          <aside class="project-side">
-            <div class="glass side-card">
-              <p class="panel-label">Why it mattered</p>
-              <ul class="detail-list">
-                <li>Fixed a real workflow problem instead of being another demo toy</li>
-                <li>Avoided tab reload behavior that broke competing extensions for the use case</li>
-                <li>Ended up implemented at work, which is a pretty decent outcome for spite-driven engineering</li>
-              </ul>
-            </div>
-
-            <div class="glass side-card">
-              <p class="panel-label">Link</p>
-              <p class="small-note">
-                Chrome Web Store listing:<br>
-                <a class="text-link" href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer">chromewebstore.google.com/detail/chrometabber</a>
-              </p>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </section>
-
-    <section id="snek-lab" class="container section-stack anchor-offset">
-      <div class="glass project-shell">
-        <div class="project-meta">
-          <div>
-            <p class="eyebrow">Featured project</p>
-            <h2>Snek Lab</h2>
-          </div>
-          <div class="pill-row">
-            <span class="pill">HTML</span>
-            <span class="pill">CSS</span>
-            <span class="pill">JavaScript</span>
-            <span class="pill">Canvas</span>
-            <span class="pill">Firebase</span>
-          </div>
-        </div>
-
-        <div class="project-layout">
-          <div class="game-panel glass-inset">
-            <div class="game-topbar">
-              <div class="game-stat"><span>Player</span><strong id="player-name">Guest</strong></div>
-              <div class="game-stat"><span>Score</span><strong id="score">0</strong></div>
-              <div class="game-stat"><span>Best</span><strong id="best">0</strong></div>
-              <div class="game-stat"><span>Status</span><strong id="status">Ready</strong></div>
-            </div>
-
-            <div class="canvas-shell">
-              <canvas id="snake-canvas" aria-label="Snake game canvas"></canvas>
-              <div class="scanlines" aria-hidden="true"></div>
-            </div>
-
-            <div class="control-row">
-              <button id="btn-start" class="button button-primary" type="button">Start</button>
-              <button id="btn-pause" class="button button-secondary" type="button">Pause</button>
-              <button id="btn-restart" class="button button-secondary" type="button">Restart</button>
-            </div>
-
-            <div class="mobile-pad" aria-label="Touch controls">
-              <button id="m-up" type="button" aria-label="Move up">↑</button>
-              <button id="m-left" type="button" aria-label="Move left">←</button>
-              <button id="m-down" type="button" aria-label="Move down">↓</button>
-              <button id="m-right" type="button" aria-label="Move right">→</button>
-            </div>
-          </div>
-
-          <aside class="project-side">
-            <div class="glass side-card">
-              <p class="panel-label">What it is</p>
-              <p>
-                A rebuild of the classic Nokia Snake because I’ve been weirdly obsessed with that game forever.
-                I kept the simple old-school loop, then added an online leaderboard so the nostalgia project could get a little competitive.
-              </p>
-              <ul class="detail-list">
-                <li>Keyboard controls plus mobile tap / swipe support</li>
-                <li>Responsive canvas with a cleaner in-site game shell</li>
-                <li>Online leaderboard with local fallback if the network flakes out</li>
-              </ul>
-            </div>
-
-            <div class="glass side-card">
-              <label class="panel-label" for="name-input">Player name</label>
-              <div class="name-row">
-                <input id="name-input" type="text" maxlength="16" placeholder="Guest">
-                <button id="name-save" class="button button-secondary" type="button">Save</button>
-              </div>
-              <p class="small-note">WASD / arrow keys to move. Space or P pauses. R restarts.</p>
-            </div>
-
-            <div class="glass side-card">
-              <p class="panel-label">Leaderboard</p>
-              <p id="leaderboard-note" class="small-note">Loading leaderboard…</p>
-              <div id="leaderboard" class="leaderboard">Loading…</div>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </section>
-
-    <section id="build-notes" class="container section-stack anchor-offset">
-      <div class="glass section-card">
-        <div class="section-heading">
-          <p class="eyebrow">Build notes</p>
-          <h2>What got cleaned up</h2>
-        </div>
-        <div class="notes-grid">
-          <article class="glass-inset note-card">
-            <h3>The site has actual structure now</h3>
-            <p>The home page introduces the work. The projects page holds the real stuff. Which is obvious in hindsight, but apparently I needed to trip over it first.</p>
-          </article>
-          <article class="glass-inset note-card">
-            <h3>ChromeTabber has a real story</h3>
-            <p>It exists because the alternatives kept reloading tabs and breaking the use case. That’s a much better reason than “I wanted another shiny thing on a resume.”</p>
-          </article>
-          <article class="glass-inset note-card">
-            <h3>Snek stopped living in exile</h3>
-            <p>The game is folded into the site properly now, with the leaderboard back in so it feels like a real little arcade project instead of a stray link I’d forget about.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="contact" class="container section-stack anchor-offset">
-      <div class="glass section-card">
-        <div class="section-heading compact">
-          <p class="eyebrow">Contact</p>
-          <h2>Useful ways to find me.</h2>
-        </div>
-        <div class="contact-grid">
-          <a class="glass-inset contact-card" href="mailto:sandropenner+support@gmail.com">
-            <span class="preview-tag">Email</span>
-            <h3>sandropenner+support@gmail.com</h3>
-            <p>Questions, feedback, collaboration, or general shouting from a respectful distance.</p>
-          </a>
-          <a class="glass-inset contact-card" href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer">
-            <span class="preview-tag">Extension</span>
-            <h3>ChromeTabber on the Chrome Web Store</h3>
-            <p>The live listing for the extension that started as a work annoyance and ended up being useful.</p>
-          </a>
-        </div>
+        </a>
       </div>
     </section>
   </main>
@@ -213,7 +100,7 @@
       <p>© <span id="year"></span> Sandro Penner</p>
       <div class="footer-links">
         <a href="index.html">Home</a>
-        <a href="mailto:sandropenner+support@gmail.com">Email</a>
+        <a href="contact.html">Contact</a>
       </div>
     </div>
   </footer>
