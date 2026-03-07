@@ -24,9 +24,9 @@
 
   <header class="site-header">
     <div class="container nav-wrap">
-      <a class="brand" href="index.html" aria-label="Home">SP</a>
+      <a class="brand" href="./" aria-label="Home">SP</a>
       <nav class="site-nav" aria-label="Primary navigation">
-        <a href="index.html">Home</a>
+        <a href="./">Home</a>
         <div class="nav-item nav-item-menu">
           <a href="projects.html" aria-current="page">Projects <span class="nav-caret">▾</span></a>
           <div class="nav-submenu glass" role="menu" aria-label="Project links">
@@ -51,14 +51,27 @@
     </section>
 
     <section class="container section-stack">
-      <div class="glass project-shell">
-        <div class="project-layout">
+      <div class="glass project-shell snek-shell">
+        <div class="glass side-card name-card">
+          <div>
+            <p class="panel-label">Player name</p>
+            <p id="name-note" class="small-note">
+              Pick a player name before the first run, then go commit tasteful reptile crimes.
+            </p>
+          </div>
+          <div class="name-row">
+            <input id="name-input" type="text" maxlength="16" placeholder="Enter a name">
+            <button id="name-save" class="button button-secondary" type="button">Save name</button>
+          </div>
+        </div>
+
+        <div class="project-layout snek-layout">
           <div class="game-panel glass-inset">
             <div class="game-topbar">
-              <div class="game-stat"><span>Player</span><strong id="player-name">Guest</strong></div>
+              <div class="game-stat"><span>Player</span><strong id="player-name">Unset</strong></div>
               <div class="game-stat"><span>Score</span><strong id="score">0</strong></div>
               <div class="game-stat"><span>Best</span><strong id="best">0</strong></div>
-              <div class="game-stat"><span>Status</span><strong id="status">Ready</strong></div>
+              <div class="game-stat"><span>Status</span><strong id="status">Pick a name</strong></div>
             </div>
 
             <div class="canvas-shell">
@@ -80,34 +93,25 @@
             </div>
           </div>
 
-          <aside class="project-side">
-            <div class="glass side-card">
-              <p class="panel-label">Why this exists</p>
-              <p>
-                Because Nokia Snake had no business being that sticky in my brain, and rebuilding it seemed like a better use of time than acting normal.
-              </p>
-              <ul class="detail-list tight-list">
-                <li>arrow keys or WASD to move</li>
-                <li>space or P to pause</li>
-                <li>R to restart if you die with dignity issues</li>
-              </ul>
-            </div>
-
-            <div class="glass side-card">
-              <label class="panel-label" for="name-input">Player name</label>
-              <div class="name-row">
-                <input id="name-input" type="text" maxlength="16" placeholder="Guest">
-                <button id="name-save" class="button button-secondary" type="button">Save</button>
-              </div>
-              <p class="small-note">Names get sanitized because the leaderboard does not need goblin SQL cosplay.</p>
-            </div>
-
-            <div class="glass side-card">
+          <aside class="project-side project-side-slim">
+            <div class="glass side-card leaderboard-card">
               <p class="panel-label">Leaderboard</p>
               <p id="leaderboard-note" class="small-note">Loading leaderboard…</p>
               <div id="leaderboard" class="leaderboard">Loading…</div>
             </div>
           </aside>
+        </div>
+
+        <div class="glass side-card why-card">
+          <p class="panel-label">Why this exists</p>
+          <p>
+            Because Nokia Snake had no business being that sticky in my brain, and rebuilding it seemed like a better use of time than acting normal.
+          </p>
+          <ul class="detail-list tight-list">
+            <li>arrow keys or WASD to move after you actually start the run</li>
+            <li>space or P to pause without the game quietly murdering you</li>
+            <li>Restart button or R to go again after you eat shit</li>
+          </ul>
         </div>
       </div>
     </section>

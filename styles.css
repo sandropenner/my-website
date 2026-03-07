@@ -528,6 +528,45 @@ h3 {
   height: 100%;
 }
 
+
+.contact-card h2 {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.snek-shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.name-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  gap: 1rem;
+  align-items: end;
+}
+
+.name-card .name-row {
+  align-items: stretch;
+}
+
+#name-note[data-state="error"] {
+  color: var(--danger);
+}
+
+.project-side-slim {
+  grid-template-columns: 1fr;
+}
+
+.leaderboard-card {
+  height: 100%;
+}
+
+.why-card {
+  margin-top: 0;
+}
+
 .project-shell {
   padding: 1.4rem;
 }
@@ -578,6 +617,7 @@ h3 {
 .canvas-shell {
   position: relative;
   overflow: hidden;
+  display: flex;
   border-radius: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background:
@@ -588,6 +628,8 @@ h3 {
 }
 
 #snake-canvas {
+  display: block;
+  flex: 1 1 auto;
   width: 100%;
   height: 100%;
   image-rendering: pixelated;
@@ -787,6 +829,7 @@ a:focus-visible {
     width: 100%;
   }
 
+  .name-card,
   .name-row {
     display: grid;
     grid-template-columns: 1fr;

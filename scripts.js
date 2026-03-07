@@ -116,6 +116,7 @@ function initStarfield() {
   window.addEventListener("resize", resizeStarfield);
 }
 
+
 async function initSnakeGame() {
   const canvas = document.getElementById("snake-canvas");
   if (!canvas) return;
@@ -127,6 +128,7 @@ async function initSnakeGame() {
   const playerEl = document.getElementById("player-name");
   const nameInput = document.getElementById("name-input");
   const saveNameBtn = document.getElementById("name-save");
+  const nameNoteEl = document.getElementById("name-note");
   const leaderboardEl = document.getElementById("leaderboard");
   const leaderboardNoteEl = document.getElementById("leaderboard-note");
 
@@ -179,12 +181,14 @@ async function initSnakeGame() {
   let best = Number(localStorage.getItem(LS_BEST) || 0);
   let direction = { x: 0, y: 0 };
   let queuedDirections = [];
-  let lastDirection = { x: 0, y: 0 };
   let running = false;
   let paused = false;
   let tickMs = BASE_MS;
   let accumulator = 0;
   let lastTimestamp = 0;
+  let loopActive = false;
+  let hasStartedOnce = false;
+  let awaitingRestart = false;
 
   let firebase = null;
   let firestoreApi = null;
@@ -193,20 +197,69 @@ async function initSnakeGame() {
     statusEl.textContent = text;
   }
 
-  function sanitizeName(rawValue) {
-    return (rawValue || "")
+  function setNameNote(text, isError = false) {
+    if (!nameNoteEl) return;
+    nameNoteEl.textContent = text;
+    nameNoteEl.dataset.state = isError ? "error" : "normal";
+  }
+
+  function sanitizeName(rawValue, fallback = "Guest") {
+    const cleaned = (rawValue || "")
       .replace(/[^a-zA-Z0-9 _-]/g, "")
       .replace(/\s+/g, " ")
       .trim()
-      .slice(0, 16) || "Guest";
+      .slice(0, 16);
+
+    return cleaned || fallback;
   }
 
-  function nameToDocId(name) {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 40) || "guest";
+  function getStoredName() {
+    return sanitizeName(localStorage.getItem(LS_NAME) || "", "");
+  }
+
+  function currentPlayerName() {
+    return sanitizeName(playerEl.textContent || "", "Guest");
+  }
+
+  function updateNameUi(name) {
+    const resolved = sanitizeName(name || "", "");
+    playerEl.textContent = resolved || "Unset";
+    nameInput.value = resolved;
+    if (resolved) {
+      setNameNote(`Saved as ${resolved}. Good enough.`, false);
+    } else {
+      setNameNote("Pick a player name before the first run, then go commit tasteful reptile crimes.", false);
+    }
+  }
+
+  function saveName() {
+    const name = sanitizeName(nameInput.value, "");
+    if (!name) {
+      localStorage.removeItem(LS_NAME);
+      updateNameUi("");
+      setNameNote("Enter a player name first.", true);
+      if (!running && !hasStartedOnce) {
+        setStatus("Pick a name");
+      }
+      nameInput.focus();
+      return false;
+    }
+
+    localStorage.setItem(LS_NAME, name);
+    updateNameUi(name);
+
+    if (!running) {
+      setStatus(awaitingRestart ? "Waiting for restart" : "Ready");
+    }
+    return true;
+  }
+
+  function ensureNameBeforePlay() {
+    if (getStoredName()) return true;
+    setStatus("Pick a name");
+    setNameNote("You need a player name before the first run.", true);
+    nameInput.focus();
+    return false;
   }
 
   function setLeaderboardNote(text) {
@@ -216,22 +269,13 @@ async function initSnakeGame() {
   }
 
   function loadName() {
-    const name = sanitizeName(localStorage.getItem(LS_NAME) || "Guest");
-    playerEl.textContent = name;
-    nameInput.value = name === "Guest" ? "" : name;
-  }
-
-  function saveName() {
-    const name = sanitizeName(nameInput.value || "Guest");
-    localStorage.setItem(LS_NAME, name);
-    playerEl.textContent = name;
-    nameInput.value = name === "Guest" ? "" : name;
+    updateNameUi(getStoredName());
   }
 
   function resizeCanvas() {
     const shell = canvas.parentElement;
     const cssWidth = Math.max(CELL * 12, Math.floor(shell.clientWidth / CELL) * CELL);
-    const cssHeight = Math.floor((cssWidth * 0.75) / CELL) * CELL;
+    const cssHeight = Math.max(CELL * 12, Math.floor((cssWidth * 0.75) / CELL) * CELL);
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     canvas.width = Math.max(1, Math.floor(cssWidth * dpr));
@@ -247,16 +291,11 @@ async function initSnakeGame() {
     cols = Math.floor(logicalWidth / CELL);
     rows = Math.floor(logicalHeight / CELL);
 
-    if (!running && snake.length === 0) {
-      snake = [
-        { x: 5, y: 6 },
-        { x: 4, y: 6 },
-        { x: 3, y: 6 },
-      ];
-      food = { x: 11, y: 6 };
+    if (snake.length === 0) {
+      resetBoard(getStoredName() ? "Ready" : "Pick a name");
+    } else {
+      draw();
     }
-
-    draw();
   }
 
   function randomFoodPosition() {
@@ -287,10 +326,9 @@ async function initSnakeGame() {
   }
 
   function saveScoreHistory() {
-    const name = sanitizeName(playerEl.textContent || "Guest");
     const scores = getSavedScores();
     scores.push({
-      name,
+      name: currentPlayerName(),
       score,
       at: Date.now(),
     });
@@ -348,11 +386,10 @@ async function initSnakeGame() {
         import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"),
       ]);
 
-      firebase = initializeApp(firebaseConfig);
+      const app = initializeApp(firebaseConfig);
       firestoreApi = firestore;
-      const db = firestore.getFirestore(firebase);
-      firebase = db;
-      firestore.enableIndexedDbPersistence(db).catch(() => {});
+      firebase = firestore.getFirestore(app);
+      firestore.enableIndexedDbPersistence(firebase).catch(() => {});
       await loadRemoteLeaderboard();
     } catch (error) {
       const cached = getCachedOnlineLeaderboard();
@@ -402,7 +439,7 @@ async function initSnakeGame() {
   async function submitRemoteScore() {
     if (!firebase || !firestoreApi || score <= 0) return;
 
-    const playerName = sanitizeName(playerEl.textContent || "Guest");
+    const playerName = currentPlayerName();
     const playerRef = firestoreApi.doc(firebase, "leaderboard", nameToDocId(playerName));
 
     try {
@@ -421,21 +458,36 @@ async function initSnakeGame() {
     }
   }
 
+  function nameToDocId(name) {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "guest";
+  }
+
   function drawGrid() {
+    ctx.save();
     ctx.strokeStyle = colors.grid;
     ctx.lineWidth = 1;
-    for (let x = 0; x <= logicalWidth; x += CELL) {
+
+    for (let x = 0; x <= cols; x += 1) {
+      const px = Math.min(logicalWidth - 0.5, x * CELL + 0.5);
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, logicalHeight);
+      ctx.moveTo(px, 0);
+      ctx.lineTo(px, logicalHeight);
       ctx.stroke();
     }
-    for (let y = 0; y <= logicalHeight; y += CELL) {
+
+    for (let y = 0; y <= rows; y += 1) {
+      const py = Math.min(logicalHeight - 0.5, y * CELL + 0.5);
       ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(logicalWidth, y);
+      ctx.moveTo(0, py);
+      ctx.lineTo(logicalWidth, py);
       ctx.stroke();
     }
+
+    ctx.restore();
   }
 
   function drawPixel(x, y, color) {
@@ -457,9 +509,10 @@ async function initSnakeGame() {
     });
   }
 
-  function resetGame() {
-    const centerX = Math.floor(cols / 2);
-    const centerY = Math.floor(rows / 2);
+  function resetBoard(statusText = "Ready") {
+    const centerX = Math.max(3, Math.floor(cols / 2));
+    const centerY = Math.max(3, Math.floor(rows / 2));
+
     snake = [
       { x: centerX, y: centerY },
       { x: centerX - 1, y: centerY },
@@ -468,28 +521,45 @@ async function initSnakeGame() {
     food = randomFoodPosition();
     score = 0;
     direction = { x: 0, y: 0 };
-    lastDirection = { x: 0, y: 0 };
     queuedDirections.length = 0;
     tickMs = BASE_MS;
     accumulator = 0;
     lastTimestamp = 0;
     paused = false;
     scoreEl.textContent = "0";
-    setStatus("Ready");
+    setStatus(statusText);
     draw();
   }
 
-  function startGame() {
-    resetGame();
+  function beginRun() {
+    if (!ensureNameBeforePlay()) return;
+    hasStartedOnce = true;
+    awaitingRestart = false;
     running = true;
-    setStatus("Playing");
-    requestAnimationFrame(loop);
+    resetBoard("Playing");
+    if (!loopActive) {
+      loopActive = true;
+      requestAnimationFrame(loop);
+    }
   }
 
-  function stopGame(finalStatus = "Crashed") {
+  function startGame() {
+    if (awaitingRestart && hasStartedOnce) {
+      setStatus("Hit Restart or R");
+      return;
+    }
+    beginRun();
+  }
+
+  function restartGame() {
+    beginRun();
+  }
+
+  function stopGame(finalStatus = "Game over") {
     running = false;
     paused = false;
-    setStatus(finalStatus);
+    awaitingRestart = true;
+    setStatus(`${finalStatus} — hit Restart or R`);
     saveScoreHistory();
     submitRemoteScore().catch(() => renderLocalLeaderboard());
     if (!firebase || !firestoreApi) {
@@ -541,17 +611,19 @@ async function initSnakeGame() {
     } else {
       snake.pop();
     }
-
-    lastDirection = { ...direction };
   }
 
   function loop(timestamp) {
     if (!running) {
       draw();
+      loopActive = false;
       return;
     }
 
     if (paused) {
+      lastTimestamp = timestamp;
+      accumulator = 0;
+      draw();
       requestAnimationFrame(loop);
       return;
     }
@@ -573,29 +645,31 @@ async function initSnakeGame() {
 
     if (running) {
       requestAnimationFrame(loop);
+    } else {
+      loopActive = false;
     }
   }
 
   function queueDirection(nextX, nextY) {
-    const lastQueued = queuedDirections[queuedDirections.length - 1] || direction;
+    if (!running) return;
+
+    const reference = queuedDirections[queuedDirections.length - 1] || direction;
     const wouldReverse =
-      (nextX === -lastDirection.x && nextY === 0 && lastDirection.y === 0) ||
-      (nextY === -lastDirection.y && nextX === 0 && lastDirection.x === 0);
+      reference.x !== 0 || reference.y !== 0
+        ? (nextX === -reference.x && nextY === -reference.y)
+        : false;
 
     if (wouldReverse) return;
-    if (lastQueued.x === nextX && lastQueued.y === nextY) return;
+    if (reference.x === nextX && reference.y === nextY) return;
 
     queuedDirections.push({ x: nextX, y: nextY });
-
-    if (!running) {
-      startGame();
-      queuedDirections = [{ x: nextX, y: nextY }];
-    }
   }
 
   function togglePause() {
     if (!running) return;
     paused = !paused;
+    accumulator = 0;
+    lastTimestamp = 0;
     setStatus(paused ? "Paused" : "Playing");
   }
 
@@ -609,7 +683,7 @@ async function initSnakeGame() {
     if (key === "a" || key === "arrowleft") queueDirection(-1, 0);
     if (key === "s" || key === "arrowdown") queueDirection(0, 1);
     if (key === "d" || key === "arrowright") queueDirection(1, 0);
-    if (key === "r") startGame();
+    if (key === "r") restartGame();
     if (key === " " || key === "p") togglePause();
   });
 
@@ -620,7 +694,7 @@ async function initSnakeGame() {
   }, { passive: true });
 
   canvas.addEventListener("touchend", (event) => {
-    if (!touchStart) return;
+    if (!touchStart || !running) return;
 
     const touch = event.changedTouches[0];
     const dx = touch.clientX - touchStart.x;
@@ -645,10 +719,11 @@ async function initSnakeGame() {
 
   startBtn.addEventListener("click", startGame);
   pauseBtn.addEventListener("click", togglePause);
-  restartBtn.addEventListener("click", startGame);
+  restartBtn.addEventListener("click", restartGame);
   saveNameBtn.addEventListener("click", saveName);
   nameInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
+      event.preventDefault();
       saveName();
       nameInput.blur();
     }
@@ -662,7 +737,7 @@ async function initSnakeGame() {
     window.__snakeResizeTimer = setTimeout(resizeCanvas, 80);
   });
 
-  resetGame();
+  resetBoard(getStoredName() ? "Ready" : "Pick a name");
   renderLocalLeaderboard();
   await bootRemoteLeaderboard();
 }

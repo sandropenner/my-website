@@ -42,7 +42,6 @@
   <text x="900" y="382" fill="#EEF2FF" font-family="Arial, sans-serif" font-size="24">#1   SnekLord   42</text>
   <text x="900" y="432" fill="#EEF2FF" font-family="Arial, sans-serif" font-size="24">#2   Goblin     35</text>
   <text x="900" y="482" fill="#EEF2FF" font-family="Arial, sans-serif" font-size="24">#3   Guest      28</text>
-  <text x="900" y="596" fill="#A8B6D8" font-family="Arial, sans-serif" font-size="26">Classic Nokia brain rot, now online.</text>
   <defs>
     <radialGradient id="a" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 610) rotate(90) scale(230)">
       <stop stop-color="#2F5AFF"/>
