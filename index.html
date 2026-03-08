@@ -17,43 +17,38 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body data-page="home">
   <canvas id="starfield" aria-hidden="true"></canvas>
-
   <header class="site-header">
     <div class="container nav-wrap">
-      <a class="brand" href="./" aria-label="Home">SP</a>
+      <a class="brand" href="/" aria-label="Home">SP</a>
       <nav class="site-nav" aria-label="Primary navigation">
-        <a href="./" aria-current="page">Home</a>
+        <a href="/" aria-current="page">Home</a>
         <div class="nav-item nav-item-menu">
-          <a href="projects.html">Projects <span class="nav-caret">▾</span></a>
+          <a href="/projects/">Projects <span class="nav-caret">▾</span></a>
           <div class="nav-submenu glass" role="menu" aria-label="Project links">
-            <a href="projects.html" role="menuitem">All projects</a>
+            <a href="/projects/" role="menuitem">All projects</a>
             <a href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer" role="menuitem">ChromeTabber ↗</a>
-            <a href="snek.html" role="menuitem">Snek</a>
+            <a href="/snek/" role="menuitem">Snek</a>
           </div>
         </div>
-        <a href="contact.html">Contact</a>
+        <a href="/contact/">Contact</a>
       </nav>
     </div>
   </header>
-
   <main>
     <section class="hero container hero-home">
-      <div class="hero-copy-block">
+      <div class="hero-copy-block page-copy-shadow">
         <p class="eyebrow">Personal site</p>
         <h1>Sandro Penner</h1>
-        <p class="hero-copy">
-          Bad ideas, chaotic builds, and results that are somehow still usable.
-        </p>
+        <p class="hero-copy">Bad ideas, chaotic builds, and results that are somehow still usable.</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="projects.html">See the chaos</a>
-          <a class="button button-secondary" href="contact.html">Contact</a>
+          <a class="button button-primary" href="/projects/">See the chaos</a>
+          <a class="button button-secondary" href="/contact/">Contact</a>
         </div>
       </div>
-
       <aside class="hero-panel glass">
         <p class="panel-label">General operating condition</p>
         <ul class="stat-list">
@@ -63,7 +58,6 @@
         </ul>
       </aside>
     </section>
-
     <section class="container section-stack">
       <div class="glass section-card">
         <div class="section-heading compact">
@@ -71,51 +65,33 @@
           <h2>Not a portfolio. More like a shelf.</h2>
         </div>
         <div class="two-col relaxed-copy">
-          <p>
-            This site is mostly where I dump the stuff that survived long enough to deserve a home.
-            Some of it solves a real problem. Some of it exists because my brain latched onto a dumb idea and refused to shut up.
-          </p>
-          <p>
-            None of this is trying to be terribly serious. I just like making things, cleaning them up until they feel good,
-            and giving the less embarrassing ones a place to sit.
-          </p>
+          <p>This site is mostly where I dump the stuff that survived long enough to deserve a home. Some of it solves a real problem. Some of it exists because my brain latched onto a dumb idea and refused to shut up.</p>
+          <p>None of this is trying to be terribly serious. I just like making things, cleaning them up until they feel good, and giving the less embarrassing ones a place to sit.</p>
         </div>
       </div>
     </section>
-
     <section class="container section-stack">
-      <div class="section-heading compact">
+      <div class="section-heading compact page-copy-shadow">
         <p class="eyebrow">Project preview</p>
         <h2>Two little gremlins currently living here.</h2>
       </div>
       <div class="project-preview-grid compact-grid">
-        <a class="glass preview-card preview-feature" href="projects.html">
-          <div class="preview-art frame-art">
-            <img src="chrometabber-preview.svg" alt="Stylized preview of the ChromeTabber extension UI.">
-          </div>
+        <a class="glass preview-card preview-feature" href="/projects/">
+          <div class="preview-art frame-art preview-darken"><img src="/chrometabber-preview.svg" alt="Stylized preview of the ChromeTabber extension UI."></div>
           <span class="preview-tag">Used at work</span>
           <h3>ChromeTabber</h3>
-          <p>
-            Built because every tab rotator I tried kept reloading pages and ruining the actual use case.
-            So I made one that behaved.
-          </p>
+          <p>Built because every tab rotator I tried kept reloading pages and ruining the actual use case. So I made one that behaved.</p>
           <span class="preview-link">See project page</span>
         </a>
-
-        <a class="glass preview-card" href="snek.html">
-          <div class="preview-art frame-art">
-            <img src="snek-preview.svg" alt="Stylized preview of the Snek game board and leaderboard.">
-          </div>
+        <a class="glass preview-card" href="/snek/">
+          <div class="preview-art frame-art preview-darken"><img src="/snek-preview.svg" alt="Stylized preview of the Snek game board and leaderboard."></div>
           <span class="preview-tag">Playable</span>
           <h3>Snek</h3>
-          <p>
-            A rebuild of Nokia Snake because apparently nostalgia needed a leaderboard and a permanent address.
-          </p>
+          <p>A rebuild of Nokia Snake because apparently nostalgia needed a leaderboard and a permanent address.</p>
           <span class="preview-link">Play Snek</span>
         </a>
       </div>
     </section>
-
     <section class="container section-stack">
       <div class="glass section-card slim-card">
         <div class="section-heading compact">
@@ -123,23 +99,18 @@
           <h2>Yes, there is an email.</h2>
         </div>
         <div class="contact-preview-row">
-          <p class="hero-copy narrow">Mostly for bugs, questions, or polite chaos.</p>
-          <a class="button button-secondary" href="contact.html">Open contact page</a>
+          <p class="hero-copy narrow" data-rotate-options="Mostly for bugs, questions, or polite chaos.||Probably not for business jargon.||Also acceptable: weird ideas that accidentally became projects.">Mostly for bugs, questions, or polite chaos.</p>
+          <a class="button button-secondary" href="/contact/">Open contact page</a>
         </div>
       </div>
     </section>
   </main>
-
   <footer class="site-footer">
     <div class="container footer-wrap">
       <p>© <span id="year"></span> Sandro Penner</p>
-      <div class="footer-links">
-        <a href="projects.html">Projects</a>
-        <a href="contact.html">Contact</a>
-      </div>
+      <div class="footer-links"><a href="/projects/">Projects</a><a href="/contact/">Contact</a></div>
     </div>
   </footer>
-
-  <script src="scripts.js"></script>
+  <script src="/scripts.js"></script>
 </body>
 </html>

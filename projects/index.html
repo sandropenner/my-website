@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects — Sandro Penner</title>
+  <meta name="description" content="The small collection of things that survived long enough to get their own page or tab.">
+  <meta property="og:title" content="Projects — Sandro Penner">
+  <meta property="og:description" content="The small collection of things that survived long enough to get their own page or tab.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sandropenner.com/projects/">
+  <meta property="og:image" content="https://sandropenner.com/og-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Projects — Sandro Penner">
+  <meta name="twitter:description" content="The small collection of things that survived long enough to get their own page or tab.">
+  <meta name="twitter:image" content="https://sandropenner.com/og-preview.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body data-page="projects">
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="/" aria-label="Home">SP</a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="/">Home</a>
+        <div class="nav-item nav-item-menu">
+          <a href="/projects/" aria-current="page">Projects <span class="nav-caret">▾</span></a>
+          <div class="nav-submenu glass" role="menu" aria-label="Project links">
+            <a href="/projects/" role="menuitem">All projects</a>
+            <a href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer" role="menuitem">ChromeTabber ↗</a>
+            <a href="/snek/" role="menuitem">Snek</a>
+          </div>
+        </div>
+        <a href="/contact/">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main class="projects-main">
+    <section class="container page-intro page-copy-shadow">
+      <p class="eyebrow">Projects</p>
+      <h1>A tiny shelf of usable nonsense.</h1>
+      <p class="hero-copy narrow" data-rotate-options="Two projects. Both slightly suspect.||One solves a real workplace problem. The other is snake with delusions of grandeur.||Small pile. Less clutter. Still enough nonsense.">Two projects. Both slightly suspect.</p>
+    </section>
+    <section class="container section-stack">
+      <div class="project-portal-grid">
+        <a class="glass portal-card portal-external" href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer">
+          <div class="portal-art frame-art large-art preview-darken"><img src="/chrometabber-preview.svg" alt="Stylized preview of ChromeTabber in a browser window."></div>
+          <div class="portal-copy">
+            <span class="preview-tag">Chrome extension</span>
+            <h2>ChromeTabber</h2>
+            <p>Built because all the tab carousel extensions I tried kept reloading pages when switching to them, which made them useless for the thing I needed at work. So I made one that actually behaved and it ended up getting used there.</p>
+            <ul class="detail-list tight-list">
+              <li>solved a real problem instead of being demo wallpaper</li>
+              <li>keeps the rotation smooth without nuking page state</li>
+              <li>opens the actual Chrome Web Store listing</li>
+            </ul>
+            <span class="portal-link">Open Chrome Web Store ↗</span>
+          </div>
+        </a>
+        <a class="glass portal-card" href="/snek/">
+          <div class="portal-art frame-art large-art preview-darken"><img src="/snek-preview.svg" alt="Stylized preview of the Snek board and leaderboard."></div>
+          <div class="portal-copy">
+            <span class="preview-tag">Playable game</span>
+            <h2>Snek</h2>
+            <p>A rebuild of classic Nokia Snake because I’ve been obsessed with that stupid little game forever. It’s now living here with an online leaderboard so nostalgia can get competitive for no good reason.</p>
+            <ul class="detail-list tight-list">
+              <li>dedicated game page instead of cluttering the projects shelf</li>
+              <li>keyboard and mobile controls</li>
+              <li>online leaderboard still wired in</li>
+            </ul>
+            <span class="portal-link">Enter Snek page</span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-wrap">
+      <p>© <span id="year"></span> Sandro Penner</p>
+      <div class="footer-links"><a href="/">Home</a><a href="/contact/">Contact</a></div>
+    </div>
+  </footer>
+  <script src="/scripts.js"></script>
+</body>
+</html>

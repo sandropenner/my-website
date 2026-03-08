@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   initStarfield();
+  initNavMenus();
+  initRotatingText();
   initSnakeGame();
 });
 
@@ -116,6 +118,54 @@ function initStarfield() {
   window.addEventListener("resize", resizeStarfield);
 }
 
+function initNavMenus() {
+  const menus = Array.from(document.querySelectorAll(".nav-item-menu"));
+  if (!menus.length) return;
+
+  menus.forEach((menu) => {
+    let closeTimer = null;
+    const open = () => {
+      if (closeTimer) {
+        clearTimeout(closeTimer);
+        closeTimer = null;
+      }
+      menu.classList.add("nav-open");
+    };
+    const close = () => {
+      closeTimer = window.setTimeout(() => menu.classList.remove("nav-open"), 220);
+    };
+
+    menu.addEventListener("mouseenter", open);
+    menu.addEventListener("mouseleave", close);
+    menu.addEventListener("focusin", open);
+    menu.addEventListener("focusout", () => {
+      window.setTimeout(() => {
+        if (!menu.contains(document.activeElement)) {
+          menu.classList.remove("nav-open");
+        }
+      }, 0);
+    });
+  });
+}
+
+function initRotatingText() {
+  const nodes = Array.from(document.querySelectorAll("[data-rotate-options]"));
+  nodes.forEach((node) => {
+    const options = (node.dataset.rotateOptions || "")
+      .split("||")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (options.length < 2) return;
+
+    let index = 0;
+    node.textContent = options[index];
+    window.setInterval(() => {
+      index = (index + 1) % options.length;
+      node.textContent = options[index];
+    }, 4200);
+  });
+}
 
 async function initSnakeGame() {
   const canvas = document.getElementById("snake-canvas");
@@ -144,6 +194,12 @@ async function initSnakeGame() {
   };
 
   const CELL = 20;
+  const idleNameNotes = [
+    "Pick a player name before the first run, then go commit tasteful reptile crimes.",
+    "Name the creature. It feels weird without paperwork.",
+    "Pick something memorable, stupid, or both.",
+    "A name helps the leaderboard know who to blame.",
+  ];
   const BASE_MS = 125;
   const SPEEDUP_EVERY = 5;
   const SPEED_FACTOR = 0.92;
@@ -173,6 +229,10 @@ async function initSnakeGame() {
 
   let logicalWidth = 0;
   let logicalHeight = 0;
+  let boardWidth = 0;
+  let boardHeight = 0;
+  let boardOffsetX = 0;
+  let boardOffsetY = 0;
   let cols = 0;
   let rows = 0;
   let snake = [];
@@ -192,13 +252,37 @@ async function initSnakeGame() {
 
   let firebase = null;
   let firestoreApi = null;
+  let nameNoteTimer = null;
+  let nameNoteIndex = 0;
 
   function setStatus(text) {
     statusEl.textContent = text;
   }
 
+  function stopIdleNameRotation() {
+    if (nameNoteTimer) {
+      window.clearInterval(nameNoteTimer);
+      nameNoteTimer = null;
+    }
+  }
+
+  function startIdleNameRotation() {
+    if (!nameNoteEl || getStoredName()) return;
+    stopIdleNameRotation();
+
+    const rotate = () => {
+      nameNoteEl.dataset.state = "normal";
+      nameNoteEl.textContent = idleNameNotes[nameNoteIndex % idleNameNotes.length];
+      nameNoteIndex += 1;
+    };
+
+    rotate();
+    nameNoteTimer = window.setInterval(rotate, 4200);
+  }
+
   function setNameNote(text, isError = false) {
     if (!nameNoteEl) return;
+    stopIdleNameRotation();
     nameNoteEl.textContent = text;
     nameNoteEl.dataset.state = isError ? "error" : "normal";
   }
@@ -228,7 +312,7 @@ async function initSnakeGame() {
     if (resolved) {
       setNameNote(`Saved as ${resolved}. Good enough.`, false);
     } else {
-      setNameNote("Pick a player name before the first run, then go commit tasteful reptile crimes.", false);
+      startIdleNameRotation();
     }
   }
 
@@ -236,7 +320,8 @@ async function initSnakeGame() {
     const name = sanitizeName(nameInput.value, "");
     if (!name) {
       localStorage.removeItem(LS_NAME);
-      updateNameUi("");
+      playerEl.textContent = "Unset";
+      nameInput.value = "";
       setNameNote("Enter a player name first.", true);
       if (!running && !hasStartedOnce) {
         setStatus("Pick a name");
@@ -274,28 +359,45 @@ async function initSnakeGame() {
 
   function resizeCanvas() {
     const shell = canvas.parentElement;
-    const cssWidth = Math.max(CELL * 12, Math.floor(shell.clientWidth / CELL) * CELL);
-    const cssHeight = Math.max(CELL * 12, Math.floor((cssWidth * 0.75) / CELL) * CELL);
+    const shellWidth = Math.max(CELL * 12, Math.floor(shell.clientWidth));
+    const shellHeight = Math.max(CELL * 12, Math.floor(shell.clientHeight));
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    canvas.width = Math.max(1, Math.floor(cssWidth * dpr));
-    canvas.height = Math.max(1, Math.floor(cssHeight * dpr));
-    canvas.style.width = `${cssWidth}px`;
-    canvas.style.height = `${cssHeight}px`;
+    canvas.width = Math.max(1, Math.floor(shellWidth * dpr));
+    canvas.height = Math.max(1, Math.floor(shellHeight * dpr));
+    canvas.style.width = `${shellWidth}px`;
+    canvas.style.height = `${shellHeight}px`;
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
 
-    logicalWidth = cssWidth;
-    logicalHeight = cssHeight;
-    cols = Math.floor(logicalWidth / CELL);
-    rows = Math.floor(logicalHeight / CELL);
+    logicalWidth = shellWidth;
+    logicalHeight = shellHeight;
+    cols = Math.max(12, Math.floor(logicalWidth / CELL));
+    rows = Math.max(12, Math.floor(logicalHeight / CELL));
+    boardWidth = cols * CELL;
+    boardHeight = rows * CELL;
+    boardOffsetX = Math.floor((logicalWidth - boardWidth) / 2);
+    boardOffsetY = Math.floor((logicalHeight - boardHeight) / 2);
 
     if (snake.length === 0) {
       resetBoard(getStoredName() ? "Ready" : "Pick a name");
     } else {
       draw();
     }
+
+    syncLeaderboardHeight();
+  }
+
+  function syncLeaderboardHeight() {
+    const gamePanel = document.querySelector(".game-panel");
+    const leaderboardCard = document.querySelector(".leaderboard-card");
+    if (!gamePanel || !leaderboardCard) return;
+    if (window.innerWidth <= 980) {
+      leaderboardCard.style.minHeight = "";
+      return;
+    }
+    leaderboardCard.style.minHeight = `${Math.round(gamePanel.getBoundingClientRect().height)}px`;
   }
 
   function randomFoodPosition() {
@@ -317,9 +419,30 @@ async function initSnakeGame() {
     }
   }
 
+  function dedupeEntries(entries, limit = 10) {
+    const bestByName = new Map();
+
+    entries.forEach((entry) => {
+      const name = sanitizeName(entry.name || "Guest");
+      const scoreValue = Number(entry.score) || 0;
+      const atValue = Number(entry.at) || 0;
+      const key = nameToDocId(name);
+      const existing = bestByName.get(key);
+
+      if (!existing || scoreValue > existing.score || (scoreValue === existing.score && atValue < existing.at)) {
+        bestByName.set(key, { name, score: scoreValue, at: atValue });
+      }
+    });
+
+    return Array.from(bestByName.values())
+      .sort((a, b) => (b.score - a.score) || (a.at - b.at))
+      .slice(0, limit);
+  }
+
   function getSavedScores() {
     try {
-      return JSON.parse(localStorage.getItem(LS_SCORES) || "[]");
+      const parsed = JSON.parse(localStorage.getItem(LS_SCORES) || "[]");
+      return dedupeEntries(Array.isArray(parsed) ? parsed : [], 8);
     } catch {
       return [];
     }
@@ -333,8 +456,7 @@ async function initSnakeGame() {
       at: Date.now(),
     });
 
-    scores.sort((a, b) => (b.score - a.score) || (a.at - b.at));
-    localStorage.setItem(LS_SCORES, JSON.stringify(scores.slice(0, 8)));
+    localStorage.setItem(LS_SCORES, JSON.stringify(dedupeEntries(scores, 8)));
   }
 
   function renderLeaderboardRows(entries) {
@@ -373,7 +495,8 @@ async function initSnakeGame() {
 
   function getCachedOnlineLeaderboard() {
     try {
-      return JSON.parse(localStorage.getItem(LS_LB_CACHE) || "[]");
+      const parsed = JSON.parse(localStorage.getItem(LS_LB_CACHE) || "[]");
+      return dedupeEntries(Array.isArray(parsed) ? parsed : []);
     } catch {
       return [];
     }
@@ -412,18 +535,19 @@ async function initSnakeGame() {
       const topQuery = firestoreApi.query(
         firestoreApi.collection(firebase, "leaderboard"),
         firestoreApi.orderBy("score", "desc"),
-        firestoreApi.limit(10),
+        firestoreApi.limit(50),
       );
       const snap = await firestoreApi.getDocs(topQuery);
-      const entries = snap.docs.map((doc) => {
+      const entries = dedupeEntries(snap.docs.map((doc) => {
         const data = doc.data() || {};
         return {
           name: sanitizeName(data.name || "Guest"),
           score: Number(data.score) || 0,
+          at: 0,
         };
-      });
+      }));
       localStorage.setItem(LS_LB_CACHE, JSON.stringify(entries));
-      setLeaderboardNote("Online top scores. Player name keeps your best run.");
+      setLeaderboardNote("Online top scores. One best score per name.");
       renderLeaderboardRows(entries);
     } catch (error) {
       const cached = getCachedOnlineLeaderboard();
@@ -472,18 +596,18 @@ async function initSnakeGame() {
     ctx.lineWidth = 1;
 
     for (let x = 0; x <= cols; x += 1) {
-      const px = Math.min(logicalWidth - 0.5, x * CELL + 0.5);
+      const px = boardOffsetX + x * CELL + 0.5;
       ctx.beginPath();
-      ctx.moveTo(px, 0);
-      ctx.lineTo(px, logicalHeight);
+      ctx.moveTo(px, boardOffsetY);
+      ctx.lineTo(px, boardOffsetY + boardHeight);
       ctx.stroke();
     }
 
     for (let y = 0; y <= rows; y += 1) {
-      const py = Math.min(logicalHeight - 0.5, y * CELL + 0.5);
+      const py = boardOffsetY + y * CELL + 0.5;
       ctx.beginPath();
-      ctx.moveTo(0, py);
-      ctx.lineTo(logicalWidth, py);
+      ctx.moveTo(boardOffsetX, py);
+      ctx.lineTo(boardOffsetX + boardWidth, py);
       ctx.stroke();
     }
 
@@ -492,7 +616,7 @@ async function initSnakeGame() {
 
   function drawPixel(x, y, color) {
     ctx.fillStyle = color;
-    ctx.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
+    ctx.fillRect(boardOffsetX + x * CELL + 1, boardOffsetY + y * CELL + 1, CELL - 2, CELL - 2);
   }
 
   function draw() {
@@ -734,10 +858,17 @@ async function initSnakeGame() {
   resizeCanvas();
   window.addEventListener("resize", () => {
     clearTimeout(window.__snakeResizeTimer);
-    window.__snakeResizeTimer = setTimeout(resizeCanvas, 80);
+    window.__snakeResizeTimer = setTimeout(() => {
+      resizeCanvas();
+      syncLeaderboardHeight();
+    }, 80);
   });
 
   resetBoard(getStoredName() ? "Ready" : "Pick a name");
+  if (!getStoredName()) {
+    startIdleNameRotation();
+  }
   renderLocalLeaderboard();
   await bootRemoteLeaderboard();
+  syncLeaderboardHeight();
 }

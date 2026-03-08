@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snek — Sandro Penner</title>
+  <meta name="description" content="A rebuild of classic Nokia Snake with an online leaderboard and a cleaner home.">
+  <meta property="og:title" content="Snek — Sandro Penner">
+  <meta property="og:description" content="A rebuild of classic Nokia Snake with an online leaderboard and a cleaner home.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sandropenner.com/snek/">
+  <meta property="og:image" content="https://sandropenner.com/og-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Snek — Sandro Penner">
+  <meta name="twitter:description" content="A rebuild of classic Nokia Snake with an online leaderboard and a cleaner home.">
+  <meta name="twitter:image" content="https://sandropenner.com/og-preview.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body data-page="snek">
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="/" aria-label="Home">SP</a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="/">Home</a>
+        <div class="nav-item nav-item-menu">
+          <a href="/projects/" aria-current="page">Projects <span class="nav-caret">▾</span></a>
+          <div class="nav-submenu glass" role="menu" aria-label="Project links">
+            <a href="/projects/" role="menuitem">All projects</a>
+            <a href="https://chromewebstore.google.com/detail/chrometabber/kibjlehehmdhligjmbafacbnnipnlppj" target="_blank" rel="noreferrer" role="menuitem">ChromeTabber ↗</a>
+            <a href="/snek/" role="menuitem">Snek</a>
+          </div>
+        </div>
+        <a href="/contact/">Contact</a>
+      </nav>
+    </div>
+  </header>
+  <main class="projects-main">
+    <section class="container page-intro compact-intro page-copy-shadow">
+      <p class="eyebrow">Playable nonsense</p>
+      <h1>Snek</h1>
+      <p class="hero-copy narrow">A rebuild of classic Nokia Snake because my brain never really moved on. Same dumb little loop. Slightly nicer shell. Online leaderboard so you can get mad at strangers.</p>
+    </section>
+    <section class="container section-stack">
+      <div class="glass project-shell snek-shell">
+        <div class="glass side-card name-card">
+          <div>
+            <p class="panel-label">Player name</p>
+            <p id="name-note" class="small-note">Pick a player name before the first run, then go commit tasteful reptile crimes.</p>
+          </div>
+          <div class="name-row">
+            <input id="name-input" type="text" maxlength="16" placeholder="Enter a name">
+            <button id="name-save" class="button button-secondary" type="button">Save name</button>
+          </div>
+        </div>
+        <div class="project-layout snek-layout snek-layout-fixed">
+          <div class="game-panel glass-inset">
+            <div class="game-topbar">
+              <div class="game-stat"><span>Player</span><strong id="player-name">Unset</strong></div>
+              <div class="game-stat"><span>Score</span><strong id="score">0</strong></div>
+              <div class="game-stat"><span>Best</span><strong id="best">0</strong></div>
+              <div class="game-stat"><span>Status</span><strong id="status">Pick a name</strong></div>
+            </div>
+            <div class="canvas-shell">
+              <canvas id="snake-canvas" aria-label="Snake game canvas"></canvas>
+              <div class="scanlines" aria-hidden="true"></div>
+            </div>
+            <div class="control-row">
+              <button id="btn-start" class="button button-primary" type="button">Start</button>
+              <button id="btn-pause" class="button button-secondary" type="button">Pause</button>
+              <button id="btn-restart" class="button button-secondary" type="button">Restart</button>
+            </div>
+            <div class="mobile-pad" aria-label="Touch controls">
+              <button id="m-up" type="button" aria-label="Move up">↑</button>
+              <button id="m-left" type="button" aria-label="Move left">←</button>
+              <button id="m-down" type="button" aria-label="Move down">↓</button>
+              <button id="m-right" type="button" aria-label="Move right">→</button>
+            </div>
+          </div>
+          <aside class="project-side project-side-slim">
+            <div class="glass side-card leaderboard-card">
+              <div>
+                <p class="panel-label">Leaderboard</p>
+                <p id="leaderboard-note" class="small-note">Loading leaderboard…</p>
+              </div>
+              <div id="leaderboard" class="leaderboard leaderboard-fill">Loading…</div>
+            </div>
+          </aside>
+        </div>
+        <div class="glass side-card why-card">
+          <p class="panel-label">Why this exists</p>
+          <p>Because Nokia Snake had no business being that sticky in my brain, and rebuilding it seemed like a better use of time than acting normal.</p>
+          <ul class="detail-list tight-list">
+            <li>arrow keys or WASD to move after you actually start the run</li>
+            <li>space or P to pause without the game quietly murdering you</li>
+            <li>Restart button or R to go again after you eat shit</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-wrap">
+      <p>© <span id="year"></span> Sandro Penner</p>
+      <div class="footer-links"><a href="/projects/">Projects</a><a href="/contact/">Contact</a></div>
+    </div>
+  </footer>
+  <script src="/scripts.js"></script>
+</body>
+</html>
