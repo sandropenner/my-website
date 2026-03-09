@@ -1,383 +1,5 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const yearEl = document.getElementById("year");
-  if (yearEl) {
-    yearEl.textContent = String(new Date().getFullYear());
-  }
-
-  initPagePrefetching();
-  initStarfield();
-  initNavMenus();
-  initRotatingText();
-  if ((document.body && document.body.dataset.page === "snek") || document.getElementById("snake-canvas")) {
-    initSnakeGame();
-  }
-});
-
-function initPagePrefetching() {
-  const linkEl = document.createElement("link");
-  const supportsPrefetch = !!(linkEl.relList && typeof linkEl.relList.supports === "function" && linkEl.relList.supports("prefetch"));
-  if (!supportsPrefetch) return;
-
-  const prefetched = new Set();
-
-  function toPrefetchUrl(rawHref) {
-    try {
-      const url = new URL(rawHref, window.location.href);
-      if (url.origin !== window.location.origin) return null;
-      if (!/^https?:$/.test(url.protocol)) return null;
-      if (url.pathname === window.location.pathname && url.search === window.location.search) return null;
-      url.hash = "";
-      return url.toString();
-    } catch {
-      return null;
-    }
-  }
-
-  function isInternalLink(anchor) {
-    if (!anchor || !anchor.href) return false;
-    if (anchor.hasAttribute("download")) return false;
-
-    const target = (anchor.getAttribute("target") || "").toLowerCase();
-    if (target && target !== "_self") return false;
-
-    const rel = (anchor.getAttribute("rel") || "").toLowerCase();
-    if (rel.includes("external")) return false;
-
-    return !!toPrefetchUrl(anchor.href);
-  }
-
-  function prefetchHref(rawHref) {
-    const normalizedUrl = toPrefetchUrl(rawHref);
-    if (!normalizedUrl || prefetched.has(normalizedUrl)) return;
-
-    const prefetchLink = document.createElement("link");
-    prefetchLink.rel = "prefetch";
-    prefetchLink.as = "document";
-    prefetchLink.href = normalizedUrl;
-    document.head.appendChild(prefetchLink);
-    prefetched.add(normalizedUrl);
-  }
-
-  const prefetchableAnchors = Array.from(document.querySelectorAll("a[href]")).filter(isInternalLink);
-  prefetchableAnchors.forEach((anchor) => {
-    const warm = () => prefetchHref(anchor.href);
-    anchor.addEventListener("mouseenter", warm, { passive: true });
-    anchor.addEventListener("focus", warm);
-    anchor.addEventListener("touchstart", warm, { passive: true });
-  });
-
-  const likelyAnchors = Array.from(document.querySelectorAll(".site-nav a[href], .footer-links a[href], .hero-actions a[href]"));
-  const idleCandidates = Array.from(new Set(
-    likelyAnchors
-      .filter(isInternalLink)
-      .map((anchor) => toPrefetchUrl(anchor.href))
-      .filter(Boolean),
-  )).slice(0, 2);
-
-  if (!idleCandidates.length) return;
-
-  const scheduleIdle = window.requestIdleCallback
-    ? (callback) => window.requestIdleCallback(callback, { timeout: 1800 })
-    : (callback) => window.setTimeout(() => callback(null), 1400);
-
-  scheduleIdle((deadline) => {
-    idleCandidates.forEach((href, index) => {
-      if (deadline && typeof deadline.timeRemaining === "function" && index > 0 && deadline.timeRemaining() < 5) {
-        return;
-      }
-      prefetchHref(href);
-    });
-  });
-}
-
-function initStarfield() {
-  const canvas = document.getElementById("starfield");
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-  let width = 0;
-  let height = 0;
-  let stars = [];
-  let shootingStar = null;
-  let lastShot = 0;
-  let glowGradient = null;
-  let starfieldRaf = 0;
-  let starfieldActive = false;
-  let resizeTimer = 0;
-  let targetFrameMs = 1000 / 60;
-  let lastRenderTimestamp = 0;
-
-  function setStarfieldTargetFps(fps) {
-    const value = Number(fps);
-    const normalized = Number.isFinite(value) && value > 0 ? Math.min(60, Math.max(10, value)) : 60;
-    targetFrameMs = 1000 / normalized;
-    lastRenderTimestamp = 0;
-  }
-
-  window.__setStarfieldTargetFps = setStarfieldTargetFps;
-  setStarfieldTargetFps(60);
-
-  function resizeStarfield() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    width = window.innerWidth;
-    height = window.innerHeight;
-    canvas.width = Math.floor(width * dpr);
-    canvas.height = Math.floor(height * dpr);
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
-    buildStars();
-
-    glowGradient = ctx.createRadialGradient(width * 0.15, height * 1.05, 0, width * 0.15, height * 1.05, width * 0.72);
-    glowGradient.addColorStop(0, "rgba(47, 90, 255, 0.24)");
-    glowGradient.addColorStop(0.38, "rgba(18, 45, 120, 0.12)");
-    glowGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-  }
-
-  function buildStars() {
-    const count = Math.min(220, Math.floor((width * height) / 9000));
-    stars = Array.from({ length: count }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      radius: Math.random() * 1.6 + 0.2,
-      alpha: Math.random() * 0.8 + 0.08,
-      speed: Math.random() * 0.0008 + 0.0002,
-      pulse: Math.random() * Math.PI * 2,
-    }));
-  }
-
-  function spawnShot(timestamp) {
-    shootingStar = {
-      x: Math.random() * width * 0.65,
-      y: Math.random() * height * 0.3,
-      length: Math.random() * 90 + 110,
-      speedX: Math.random() * 7 + 9,
-      speedY: Math.random() * 4 + 6,
-      life: 0,
-      maxLife: 55,
-    };
-    lastShot = timestamp;
-  }
-
-  function drawShot() {
-    if (!shootingStar) return;
-    const tailX = shootingStar.x - shootingStar.length;
-    const tailY = shootingStar.y - shootingStar.length * 0.6;
-    const opacity = 1 - shootingStar.life / shootingStar.maxLife;
-    const gradient = ctx.createLinearGradient(shootingStar.x, shootingStar.y, tailX, tailY);
-    gradient.addColorStop(0, `rgba(255,255,255,${opacity})`);
-    gradient.addColorStop(1, "rgba(255,255,255,0)");
-
-    ctx.beginPath();
-    ctx.moveTo(shootingStar.x, shootingStar.y);
-    ctx.lineTo(tailX, tailY);
-    ctx.strokeStyle = gradient;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    shootingStar.x += shootingStar.speedX;
-    shootingStar.y += shootingStar.speedY;
-    shootingStar.life += 1;
-
-    if (shootingStar.life >= shootingStar.maxLife) {
-      shootingStar = null;
-    }
-  }
-
-  function animateStarfield(timestamp = 0) {
-    if (!starfieldActive) return;
-
-    if (lastRenderTimestamp && (timestamp - lastRenderTimestamp) < targetFrameMs) {
-      starfieldRaf = window.requestAnimationFrame(animateStarfield);
-      return;
-    }
-    lastRenderTimestamp = timestamp;
-
-    ctx.clearRect(0, 0, width, height);
-
-    if (glowGradient) {
-      ctx.fillStyle = glowGradient;
-      ctx.fillRect(0, 0, width, height);
-    }
-
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = "rgba(255, 255, 255, 0.3)";
-    for (const star of stars) {
-      const alpha = star.alpha + Math.sin(timestamp * star.speed + star.pulse) * 0.18;
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.08, alpha)})`;
-      ctx.fill();
-    }
-    ctx.shadowBlur = 0;
-
-    if (!shootingStar && timestamp - lastShot > 3200) {
-      spawnShot(timestamp);
-    }
-    drawShot();
-
-    starfieldRaf = window.requestAnimationFrame(animateStarfield);
-  }
-
-  function startStarfield() {
-    if (starfieldActive) return;
-    starfieldActive = true;
-    lastRenderTimestamp = 0;
-    starfieldRaf = window.requestAnimationFrame(animateStarfield);
-  }
-
-  function stopStarfield() {
-    starfieldActive = false;
-    if (starfieldRaf) {
-      window.cancelAnimationFrame(starfieldRaf);
-      starfieldRaf = 0;
-    }
-  }
-
-  resizeStarfield();
-  if (!document.hidden) {
-    startStarfield();
-  }
-
-  window.addEventListener("resize", () => {
-    if (resizeTimer) {
-      window.clearTimeout(resizeTimer);
-    }
-    resizeTimer = window.setTimeout(() => {
-      resizeTimer = 0;
-      resizeStarfield();
-    }, 80);
-  }, { passive: true });
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      stopStarfield();
-      return;
-    }
-    lastRenderTimestamp = 0;
-    lastShot = performance.now();
-    startStarfield();
-  });
-}
-
-function initNavMenus() {
-  const menus = Array.from(document.querySelectorAll(".nav-item-menu"));
-  if (!menus.length) return;
-
-  menus.forEach((menu) => {
-    let closeTimer = null;
-    const open = () => {
-      if (closeTimer) {
-        clearTimeout(closeTimer);
-        closeTimer = null;
-      }
-      menu.classList.add("nav-open");
-    };
-    const close = () => {
-      closeTimer = window.setTimeout(() => menu.classList.remove("nav-open"), 220);
-    };
-
-    menu.addEventListener("mouseenter", open);
-    menu.addEventListener("mouseleave", close);
-    menu.addEventListener("focusin", open);
-    menu.addEventListener("focusout", () => {
-      window.setTimeout(() => {
-        if (!menu.contains(document.activeElement)) {
-          menu.classList.remove("nav-open");
-        }
-      }, 0);
-    });
-  });
-}
-
-function initRotatingText() {
-  const pageKey = (document.body && document.body.dataset && document.body.dataset.page) || "default";
-  const extraOptionsByPage = {
-    home: [
-      "This site is held together by caffeine and denial.",
-      "Functional chaos with surprisingly few legal issues.",
-      "Everything here started as a bad idea and got promoted.",
-      "A personal museum of controlled technical disasters.",
-      "Built first, questioned later, fixed eventually.",
-      "Not polished, just aggressively debugged.",
-      "What if nonsense had version control?",
-      "The vibes are unstable but the links work.",
-      "Low ceremony, high weirdness, usable outcomes.",
-      "A peaceful place to store loud ideas.",
-      "Half engineering, half goblin impulse.",
-      "This page has survived multiple questionable decisions.",
-      "Still not a brand. Still somehow functional.",
-      "Yes, this is the clean version.",
-      "If it looks intentional, that was an accident.",
-      "Curated nonsense with acceptable uptime.",
-      "Ship now, roast later, patch forever.",
-      "A tiny kingdom of practical bad decisions.",
-    ],
-    projects: [
-      "Two projects, both suspiciously functional.",
-      "A compact shelf of things that refused to die.",
-      "Small list, big personality disorder.",
-      "Proof that stubbornness can be productive.",
-      "Everything here was born from mild annoyance.",
-      "Minimal clutter, maximum side quest energy.",
-      "Features first, dignity later.",
-      "A short lineup of overcommitted ideas.",
-      "Tiny portfolio, loud intent.",
-      "Projects selected by survivability, not elegance.",
-      "Built under pressure, named under duress.",
-      "These shipped despite my better judgement.",
-      "No filler, just polished weirdness.",
-      "A controlled leak of my side projects.",
-      "Workable chaos, neatly categorized.",
-      "Fewer projects, fewer lies.",
-      "Each card is a solved problem with attitude.",
-      "Small roster, unreasonable commitment.",
-    ],
-    contact: [
-      "Email is open. Regret is optional.",
-      "Yes, a real inbox exists.",
-      "Send bugs, ideas, or respectful chaos.",
-      "No form builder. Just direct communication.",
-      "Corporate tone gets filtered by gravity.",
-      "If something broke, say so.",
-      "If something worked, that is suspicious.",
-      "Questions welcome, buzzwords discouraged.",
-      "Reach out if your idea is strange but useful.",
-      "Support inbox with mild emotional damage.",
-      "Still easier than scheduling a meeting.",
-      "Serious messages accepted. Weird ones encouraged.",
-      "One email, many possible bad decisions.",
-      "Yes, this is the official goblin hotline.",
-      "If it is urgent, include context and mercy.",
-      "No bots, no forms, no fake friendliness.",
-      "Contact page powered by basic literacy.",
-      "Ask clearly, get a real answer.",
-    ],
-    default: [
-      "Pick a lane, then drift through it.",
-      "Stable enough for public viewing.",
-      "Neatly packaged nonsense.",
-      "Built with intent and occasional concern.",
-      "Technical chaos, responsibly deployed.",
-      "Not corporate, not sorry, still usable.",
-    ],
-  };
-
-  const nodes = Array.from(document.querySelectorAll("[data-rotate-options]"));
-  nodes.forEach((node) => {
-    const inlineOptions = (node.dataset.rotateOptions || "")
-      .split("||")
-      .map((item) => item.trim())
-      .filter(Boolean);
-    const extraOptions = extraOptionsByPage[pageKey] || extraOptionsByPage.default;
-    const options = Array.from(new Set([...inlineOptions, ...extraOptions]));
-
-    if (!options.length) return;
-    const index = Math.floor(Math.random() * options.length);
-    node.textContent = options[index];
-  });
-}
+(function () {
+  const Site = window.Site || (window.Site = {});
 
 async function initSnakeGame() {
   const canvas = document.getElementById("snake-canvas");
@@ -693,6 +315,7 @@ async function initSnakeGame() {
   const MIN_TICK_MS = 64;
   const LS_NAME = "portfolio_snake_player_name";
   const LS_BEST = "portfolio_snake_best_score";
+  const LS_BEST_BY_NAME = "portfolio_snake_best_score_by_name";
   const LS_SCORES = "portfolio_snake_recent_scores";
   const LS_LB_CACHE = "portfolio_snake_online_cache";
 
@@ -726,8 +349,9 @@ async function initSnakeGame() {
   let snake = [];
   let food = { x: 0, y: 0 };
   let score = 0;
-  let storedBest = Number(localStorage.getItem(LS_BEST) || 0);
-  let best = storedBest;
+  let localBestByName = {};
+  let legacyBestPending = Number(localStorage.getItem(LS_BEST) || 0);
+  let best = 0;
   let direction = { x: 0, y: 0 };
   let queuedDirections = [];
   let running = false;
@@ -801,6 +425,65 @@ async function initSnakeGame() {
   function normalizeNameForMatch(name) {
     return sanitizeName(name || "", "").toLowerCase();
   }
+
+  function loadLocalBestByName() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(LS_BEST_BY_NAME) || "{}");
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return {};
+      }
+
+      const normalizedMap = {};
+      Object.entries(parsed).forEach(([rawName, rawScore]) => {
+        const normalized = normalizeNameForMatch(rawName);
+        const scoreValue = Math.floor(Number(rawScore) || 0);
+        if (!normalized || scoreValue <= 0) return;
+        normalizedMap[normalized] = Math.max(normalizedMap[normalized] || 0, scoreValue);
+      });
+
+      return normalizedMap;
+    } catch {
+      return {};
+    }
+  }
+
+  function saveLocalBestByName() {
+    localStorage.setItem(LS_BEST_BY_NAME, JSON.stringify(localBestByName));
+  }
+
+  function getLocalBestForName(name) {
+    const normalized = normalizeNameForMatch(name);
+    if (!normalized) return 0;
+    return Number(localBestByName[normalized]) || 0;
+  }
+
+  function setLocalBestForName(name, scoreValue) {
+    const normalized = normalizeNameForMatch(name);
+    const nextBest = Math.floor(Number(scoreValue) || 0);
+    if (!normalized || nextBest <= 0) return false;
+
+    const previousBest = Number(localBestByName[normalized]) || 0;
+    if (nextBest <= previousBest) return false;
+
+    localBestByName[normalized] = nextBest;
+    saveLocalBestByName();
+    return true;
+  }
+
+  function maybeMigrateLegacyBest(name) {
+    const legacyBest = Math.floor(Number(legacyBestPending) || 0);
+    if (legacyBest <= 0) {
+      legacyBestPending = 0;
+      return;
+    }
+
+    if (!normalizeNameForMatch(name)) return;
+    setLocalBestForName(name, legacyBest);
+    localStorage.removeItem(LS_BEST);
+    legacyBestPending = 0;
+  }
+
+  localBestByName = loadLocalBestByName();
 
   function pickMessage(channelKey, lines) {
     if (!Array.isArray(lines) || !lines.length) return "";
@@ -921,7 +604,7 @@ async function initSnakeGame() {
   function knownBestForCurrentName() {
     const playerName = activeName || getStoredName() || sanitizeName(playerEl.textContent || "", "");
     const leaderboardBest = getVisibleTopBestForName(playerName);
-    return leaderboardBest === null ? storedBest : leaderboardBest;
+    return leaderboardBest === null ? getLocalBestForName(playerName) : leaderboardBest;
   }
 
   function syncBestDisplay() {
@@ -934,6 +617,7 @@ async function initSnakeGame() {
     const { syncInput = false } = options;
     const resolved = sanitizeName(name || "", "");
     activeName = resolved;
+    maybeMigrateLegacyBest(resolved);
     playerEl.textContent = resolved || "Unset";
     if (syncInput) {
       nameInput.value = resolved;
@@ -1062,6 +746,7 @@ async function initSnakeGame() {
 
   function loadName() {
     const storedName = getStoredName();
+    maybeMigrateLegacyBest(storedName);
     updateNameUi(storedName, { syncInput: true });
     lastCommittedName = storedName;
     if (storedName) {
@@ -1126,10 +811,8 @@ async function initSnakeGame() {
   }
 
   function updateBest() {
-    if (score > storedBest) {
-      storedBest = score;
-      localStorage.setItem(LS_BEST, String(storedBest));
-    }
+    const playerName = currentPlayerName();
+    setLocalBestForName(playerName, score);
     syncBestDisplay();
 
     if (!running || score <= runStartingBest) return;
@@ -1632,3 +1315,6 @@ async function initSnakeGame() {
   await bootRemoteLeaderboard();
   syncLeaderboardHeight();
 }
+
+  Site.initSnakeGame = initSnakeGame;
+})();
