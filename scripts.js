@@ -104,6 +104,18 @@ function initStarfield() {
   let starfieldRaf = 0;
   let starfieldActive = false;
   let resizeTimer = 0;
+  let targetFrameMs = 1000 / 60;
+  let lastRenderTimestamp = 0;
+
+  function setStarfieldTargetFps(fps) {
+    const value = Number(fps);
+    const normalized = Number.isFinite(value) && value > 0 ? Math.min(60, Math.max(10, value)) : 60;
+    targetFrameMs = 1000 / normalized;
+    lastRenderTimestamp = 0;
+  }
+
+  window.__setStarfieldTargetFps = setStarfieldTargetFps;
+  setStarfieldTargetFps(60);
 
   function resizeStarfield() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -175,6 +187,13 @@ function initStarfield() {
 
   function animateStarfield(timestamp = 0) {
     if (!starfieldActive) return;
+
+    if (lastRenderTimestamp && (timestamp - lastRenderTimestamp) < targetFrameMs) {
+      starfieldRaf = window.requestAnimationFrame(animateStarfield);
+      return;
+    }
+    lastRenderTimestamp = timestamp;
+
     ctx.clearRect(0, 0, width, height);
 
     if (glowGradient) {
@@ -204,6 +223,7 @@ function initStarfield() {
   function startStarfield() {
     if (starfieldActive) return;
     starfieldActive = true;
+    lastRenderTimestamp = 0;
     starfieldRaf = window.requestAnimationFrame(animateStarfield);
   }
 
@@ -235,6 +255,7 @@ function initStarfield() {
       stopStarfield();
       return;
     }
+    lastRenderTimestamp = 0;
     lastShot = performance.now();
     startStarfield();
   });
@@ -271,21 +292,90 @@ function initNavMenus() {
 }
 
 function initRotatingText() {
+  const pageKey = (document.body && document.body.dataset && document.body.dataset.page) || "default";
+  const extraOptionsByPage = {
+    home: [
+      "This site is held together by caffeine and denial.",
+      "Functional chaos with surprisingly few legal issues.",
+      "Everything here started as a bad idea and got promoted.",
+      "A personal museum of controlled technical disasters.",
+      "Built first, questioned later, fixed eventually.",
+      "Not polished, just aggressively debugged.",
+      "What if nonsense had version control?",
+      "The vibes are unstable but the links work.",
+      "Low ceremony, high weirdness, usable outcomes.",
+      "A peaceful place to store loud ideas.",
+      "Half engineering, half goblin impulse.",
+      "This page has survived multiple questionable decisions.",
+      "Still not a brand. Still somehow functional.",
+      "Yes, this is the clean version.",
+      "If it looks intentional, that was an accident.",
+      "Curated nonsense with acceptable uptime.",
+      "Ship now, roast later, patch forever.",
+      "A tiny kingdom of practical bad decisions.",
+    ],
+    projects: [
+      "Two projects, both suspiciously functional.",
+      "A compact shelf of things that refused to die.",
+      "Small list, big personality disorder.",
+      "Proof that stubbornness can be productive.",
+      "Everything here was born from mild annoyance.",
+      "Minimal clutter, maximum side quest energy.",
+      "Features first, dignity later.",
+      "A short lineup of overcommitted ideas.",
+      "Tiny portfolio, loud intent.",
+      "Projects selected by survivability, not elegance.",
+      "Built under pressure, named under duress.",
+      "These shipped despite my better judgement.",
+      "No filler, just polished weirdness.",
+      "A controlled leak of my side projects.",
+      "Workable chaos, neatly categorized.",
+      "Fewer projects, fewer lies.",
+      "Each card is a solved problem with attitude.",
+      "Small roster, unreasonable commitment.",
+    ],
+    contact: [
+      "Email is open. Regret is optional.",
+      "Yes, a real inbox exists.",
+      "Send bugs, ideas, or respectful chaos.",
+      "No form builder. Just direct communication.",
+      "Corporate tone gets filtered by gravity.",
+      "If something broke, say so.",
+      "If something worked, that is suspicious.",
+      "Questions welcome, buzzwords discouraged.",
+      "Reach out if your idea is strange but useful.",
+      "Support inbox with mild emotional damage.",
+      "Still easier than scheduling a meeting.",
+      "Serious messages accepted. Weird ones encouraged.",
+      "One email, many possible bad decisions.",
+      "Yes, this is the official goblin hotline.",
+      "If it is urgent, include context and mercy.",
+      "No bots, no forms, no fake friendliness.",
+      "Contact page powered by basic literacy.",
+      "Ask clearly, get a real answer.",
+    ],
+    default: [
+      "Pick a lane, then drift through it.",
+      "Stable enough for public viewing.",
+      "Neatly packaged nonsense.",
+      "Built with intent and occasional concern.",
+      "Technical chaos, responsibly deployed.",
+      "Not corporate, not sorry, still usable.",
+    ],
+  };
+
   const nodes = Array.from(document.querySelectorAll("[data-rotate-options]"));
   nodes.forEach((node) => {
-    const options = (node.dataset.rotateOptions || "")
+    const inlineOptions = (node.dataset.rotateOptions || "")
       .split("||")
       .map((item) => item.trim())
       .filter(Boolean);
+    const extraOptions = extraOptionsByPage[pageKey] || extraOptionsByPage.default;
+    const options = Array.from(new Set([...inlineOptions, ...extraOptions]));
 
-    if (options.length < 2) return;
-
-    let index = 0;
+    if (!options.length) return;
+    const index = Math.floor(Math.random() * options.length);
     node.textContent = options[index];
-    window.setInterval(() => {
-      index = (index + 1) % options.length;
-      node.textContent = options[index];
-    }, 4200);
   });
 }
 
@@ -313,72 +403,289 @@ async function initSnakeGame() {
     "Name your snake. We need someone to blame cleanly.",
     "No name, no run, no excuses. Pick one.",
     "Give it a name so the leaderboard can laugh correctly.",
+    "No paperwork, no public shaming.",
+    "Enter a name. The wall wants a target.",
   ];
-  const liveNameRoasts = [
-    "Saved as {name}. Have fun introducing your face to walls.",
-    "Saved as {name}. Try not to lose to geometry in under ten seconds.",
-    "Saved as {name}. Big name, tiny survival instincts.",
-    "Saved as {name}. The board is ready to watch this collapse.",
-    "Saved as {name}. Confidence noted. Skill still pending.",
-    "Saved as {name}. This is already aging badly.",
-    "Saved as {name}. Bold choice for someone about to panic-turn.",
-    "Saved as {name}. Great, now your mistakes are branded.",
-    "Saved as {name}. Keep that energy for your next wall impact.",
-    "Saved as {name}. You look like a future cautionary tale.",
-    "Saved as {name}. Peak paperwork before immediate disaster.",
-    "Saved as {name}. Even the snake seems unconvinced.",
-    "Saved as {name}. The leaderboard smells incoming embarrassment.",
-    "Saved as {name}. Fancy label for basic crashing.",
-    "Saved as {name}. Name locked, dignity negotiable.",
-    "Saved as {name}. Very brave for someone steering with vibes.",
-    "Saved as {name}. Excellent, now fail in high definition.",
-    "Saved as {name}. You are one bad turn from comedy.",
-    "Saved as {name}. Try lasting longer than this sentence.",
-    "Saved as {name}. Good luck pretending that crash was intentional.",
-    "Saved as {name}. Looking forward to your dramatic self-own.",
-    "Saved as {name}. Go on, disappoint us with style.",
-    "Saved as {name}. Premium name, budget reflexes.",
-    "Saved as {name}. You are now officially accountable for this mess.",
-  ];
-  const deathRoasts = {
-    wall: [
-      "{name} smacked a wall at {score}. Turns out walls still win.",
-      "{name} met a wall at {score} and lost the negotiation.",
-      "{name} tried to phase through bricks at {score}. Bold and incorrect.",
-      "{name} kissed the boundary at {score}. Very committed.",
-      "{name} hit a wall at {score}. Geometry remains undefeated.",
-      "{name} speedran a wall collision for {score} points of regret.",
-      "{name} saw the edge at {score} and kept going anyway.",
-      "{name} ricocheted off reality at {score}. Spectacular.",
-      "{name} challenged a wall at {score} and got folded.",
-      "{name} made direct eye contact with a wall at {score}.",
-      "{name} reached {score}, then got body-checked by architecture.",
-      "{name} proved at {score} that corners are not optional.",
-    ],
-    self: [
-      "{name} ate their own tail at {score}. Gourmet failure.",
-      "{name} folded into themselves at {score}. Modern art moment.",
-      "{name} tied a knot at {score} and called it strategy.",
-      "{name} outsmarted {name} at {score}. Sadly, in the wrong direction.",
-      "{name} collided with personal history at {score}.",
-      "{name} performed self-sabotage at {score} with zero hesitation.",
-      "{name} looped into self-destruction at {score}. Elegant disaster.",
-      "{name} turned inward at {score} and found consequences.",
-      "{name} hugged their own tail at {score}. Fatal affection.",
-      "{name} made a U-turn into doom at {score}.",
-      "{name} set up a perfect trap for themselves at {score}.",
-      "{name} completed the self-own combo at {score}.",
-    ],
-    generic: [
-      "{name} died at {score}. The snake filed a complaint.",
-      "{name} crashed out at {score}. Stunning lack of restraint.",
-      "{name} is done at {score}. Performance art level collapse.",
-      "{name} faceplanted at {score}. Please clap politely.",
-      "{name} reached {score} before the universe corrected things.",
-      "{name} exploded their run at {score}. Clean ending.",
-      "{name} got deleted at {score}. Tough scene.",
-      "{name} ended at {score}. The walls are still laughing.",
-    ],
+  const nameRoastPools = {
+    live: {
+      defaultish: [
+        "Saved as {name}. Brave to pick the default setting for your identity.",
+        "Saved as {name}. Corporate placeholder energy, zero shame.",
+        "Saved as {name}. Your creativity died before the first turn.",
+        "Saved as {name}. The walls did not need this little effort.",
+      ],
+      short: [
+        "Saved as {name}. Short name, short fuse, short run incoming.",
+        "Saved as {name}. Minimal letters, maximal liability.",
+        "Saved as {name}. Compact branding for compact disasters.",
+        "Saved as {name}. Cute and efficient, like your future crash.",
+      ],
+      long: [
+        "Saved as {name}. Long name, same tiny reaction time.",
+        "Saved as {name}. You spent all your budget on syllables.",
+        "Saved as {name}. Epic title, beginner movement.",
+        "Saved as {name}. Novel length identity, speedrun lifespan.",
+      ],
+      allcaps: [
+        "Saved as {name}. All caps cannot out-yell the wall.",
+        "Saved as {name}. Loud typography, quiet skill.",
+        "Saved as {name}. Shouting noted. Directional competence not found.",
+        "Saved as {name}. Peak volume, average survival.",
+      ],
+      numeric: [
+        "Saved as {name}. Serial number confirmed. Human judgement unclear.",
+        "Saved as {name}. Looks like a password, plays like a mistake.",
+        "Saved as {name}. Spreadsheet name, tragic pathing.",
+        "Saved as {name}. You named yourself a code and still decode into walls.",
+      ],
+      smash: [
+        "Saved as {name}. That name looks like a keyboard panic.",
+        "Saved as {name}. Excellent gibberish, suspiciously on-brand.",
+        "Saved as {name}. Did your cat file this name for you?",
+        "Saved as {name}. Random letters, consistent failure trajectory.",
+      ],
+      repeated: [
+        "Saved as {name}. Repeating letters like your mistakes.",
+        "Saved as {name}. Pattern detected: commitment to bad loops.",
+        "Saved as {name}. You really trusted one letter this much.",
+        "Saved as {name}. Duplicate characters, duplicate regrets.",
+      ],
+      edgy: [
+        "Saved as {name}. Dark name, bright wall impact.",
+        "Saved as {name}. Intimidating label, very calm collapse.",
+        "Saved as {name}. Villain branding, side-character reflexes.",
+        "Saved as {name}. You named a final boss and drove like an intern.",
+      ],
+      general: [
+        "Saved as {name}. The board is eager to witness your decline.",
+        "Saved as {name}. Confidence entered the chat. Skill is buffering.",
+        "Saved as {name}. Premium label, discount decision making.",
+        "Saved as {name}. The snake has concerns and no legal defense.",
+        "Saved as {name}. You are now accountable for this timeline.",
+        "Saved as {name}. Good. Your failures are now properly attributed.",
+      ],
+    },
+    saved: {
+      defaultish: [
+        "{name} was loaded from storage. Still generic, still cursed.",
+        "{name} is back. The minimum effort legend continues.",
+        "{name} restored. Originality remains on leave.",
+      ],
+      short: [
+        "{name} restored. Efficient branding for inefficient steering.",
+        "{name} loaded. Tiny name, big collision energy.",
+        "{name} is back. Still concise, still dangerous to yourself.",
+      ],
+      long: [
+        "{name} restored. Long name, short patience.",
+        "{name} loaded. Dramatic title, familiar problems.",
+        "{name} is back. Still overnamed, still underprepared.",
+      ],
+      allcaps: [
+        "{name} restored in full volume.",
+        "{name} loaded. Still yelling into the void.",
+        "{name} is back. Caps lock could not save you.",
+      ],
+      numeric: [
+        "{name} restored. Barcode personality, human errors.",
+        "{name} loaded. Numeric identity, emotional gameplay.",
+        "{name} is back. Still reading like a failed unlock code.",
+      ],
+      smash: [
+        "{name} restored. Keyboard chaos returns.",
+        "{name} loaded. Random letters, predictable outcomes.",
+        "{name} is back. Still looks like a panic typo.",
+      ],
+      repeated: [
+        "{name} restored. Repetition is your lifestyle.",
+        "{name} loaded. Echoed letters, echoed mistakes.",
+        "{name} is back. Loop behavior confirmed.",
+      ],
+      edgy: [
+        "{name} restored. Edgy name, same fragile route.",
+        "{name} loaded. Grim branding, comedic endings.",
+        "{name} is back. Menacing title, polite crash speed.",
+      ],
+      general: [
+        "{name} restored. History has resumed its bad decisions.",
+        "{name} loaded. Welcome back to intentional chaos.",
+        "{name} is back. The walls remember you.",
+        "{name} restored. Legacy mode: public embarrassment.",
+      ],
+    },
+  };
+  const deathRoastPools = {
+    wall: {
+      awful: [
+        "{name} hit a wall at {score}. Fastest route to humiliation found.",
+        "{name} reached {score} and headbutted architecture.",
+        "{name} lost to a straight line at {score}.",
+      ],
+      rough: [
+        "{name} met the boundary at {score}. Early and loud.",
+        "{name} clipped a wall at {score}. Confidence exceeded skill.",
+        "{name} reached {score} then argued with concrete.",
+      ],
+      mid: [
+        "{name} hit a wall at {score}. Respectable run, bad ending.",
+        "{name} made it to {score}, then forgot edges exist.",
+        "{name} reached {score} and donated the run to geometry.",
+      ],
+      strong: [
+        "{name} posted {score} then threw it at a wall.",
+        "{name} had {score} and still picked brick as a destination.",
+        "{name} got to {score}. Choke delivered with precision.",
+      ],
+      elite: [
+        "{name} reached {score} and still died to a wall. Historic throw.",
+        "{name} had a monster run at {score}, then faceplanted the border.",
+        "{name} scored {score} and ended it with premium stupidity.",
+      ],
+    },
+    self: {
+      awful: [
+        "{name} self-collided at {score}. You trapped yourself immediately.",
+        "{name} tied a knot at {score}. Catastrophically efficient.",
+        "{name} hit your own tail at {score}. Friendly fire speedrun.",
+      ],
+      rough: [
+        "{name} folded into yourself at {score}. Artistic but fatal.",
+        "{name} reached {score} then body-checked your own history.",
+        "{name} self-destructed at {score}. Very on-brand.",
+      ],
+      mid: [
+        "{name} self-collided at {score}. Decent run, tragic awareness.",
+        "{name} reached {score} then invented a personal traffic jam.",
+        "{name} looped into doom at {score}.",
+      ],
+      strong: [
+        "{name} had {score} and still ate your own tail.",
+        "{name} reached {score}, then executed a deluxe self-own.",
+        "{name} put up {score} and lost to yourself anyway.",
+      ],
+      elite: [
+        "{name} reached {score} and still managed self-sabotage.",
+        "{name} had an elite run at {score}, then folded in half.",
+        "{name} posted {score}. Final boss defeated: yourself.",
+      ],
+    },
+    generic: {
+      awful: [
+        "{name} died at {score}. Not even the warmup survived.",
+        "{name} ended at {score}. Brief, loud, memorable for bad reasons.",
+        "{name} crashed at {score}. The snake did not consent to this.",
+      ],
+      rough: [
+        "{name} died at {score}. Enough to hurt, not enough to brag.",
+        "{name} finished at {score}. Mediocre chaos achieved.",
+        "{name} ended at {score}. Tragic middle-management energy.",
+      ],
+      mid: [
+        "{name} died at {score}. Solid run, criminal finish.",
+        "{name} ended at {score}. Good effort, questionable final turn.",
+        "{name} crashed at {score}. Could have been worse, somehow.",
+      ],
+      strong: [
+        "{name} died at {score}. Strong run, catastrophic closing act.",
+        "{name} ended at {score}. That was almost respectable.",
+        "{name} finished at {score}. Painful but impressive.",
+      ],
+      elite: [
+        "{name} died at {score}. Elite score, deeply cursed ending.",
+        "{name} ended at {score}. The throw was cinematic.",
+        "{name} crashed at {score}. Everyone is both impressed and upset.",
+      ],
+    },
+  };
+  const highScoreRoastPools = {
+    tiny: {
+      awful: [
+        "{name} set a new best: {score}. Improvement by inches, ego by miles.",
+        "{name} new best {score} (+{delta}). Barely progress, still progress.",
+      ],
+      rough: [
+        "{name} new best {score} (+{delta}). Congratulations on minimal growth.",
+        "{name} improved to {score}. Tiny upgrade, loud celebration pending.",
+      ],
+      mid: [
+        "{name} nudged the best to {score} (+{delta}). Reluctantly noted.",
+        "{name} squeezed out a new best: {score}. Bare minimum heroics.",
+      ],
+      strong: [
+        "{name} hit a new best of {score} by {delta}. Annoyingly competent.",
+        "{name} updated best to {score}. Small delta, large attitude.",
+      ],
+      elite: [
+        "{name} reached {score} and still only beat best by {delta}. Petty greatness.",
+        "{name} new best {score}. Tiny margin, massive smug potential.",
+      ],
+    },
+    moderate: {
+      awful: [
+        "{name} raised best to {score} (+{delta}). Unpleasantly effective.",
+        "{name} improved by {delta} to {score}. Better than expected.",
+      ],
+      rough: [
+        "{name} new best {score} (+{delta}). Fine. Keep acting surprised.",
+        "{name} moved the record to {score}. This is becoming a pattern.",
+      ],
+      mid: [
+        "{name} posted a new best: {score} (+{delta}). I hate to admit that was solid.",
+        "{name} improved to {score}. Moderate jump, maximum annoyance.",
+      ],
+      strong: [
+        "{name} shoved best to {score} (+{delta}). Reluctant respect granted.",
+        "{name} dropped a real upgrade: {score}. This is getting inconvenient.",
+      ],
+      elite: [
+        "{name} reached {score} (+{delta}). You are making this harder to mock.",
+        "{name} set best to {score}. The snake is visibly annoyed.",
+      ],
+    },
+    big: {
+      awful: [
+        "{name} leaped to {score} (+{delta}). Suddenly competent and obnoxious.",
+        "{name} nuked the old best with {score}. Disturbing behavior.",
+      ],
+      rough: [
+        "{name} smashed best to {score} (+{delta}). That was not supposed to happen.",
+        "{name} jumped by {delta} to {score}. Someone has been practicing, sadly.",
+      ],
+      mid: [
+        "{name} blasted past old best: {score} (+{delta}). Painfully legit.",
+        "{name} posted {score}. Big jump. Terrible for my narrative.",
+      ],
+      strong: [
+        "{name} detonated the old record with {score} (+{delta}). Grossly effective.",
+        "{name} hit {score}. Large improvement. Confidence now unbearable.",
+      ],
+      elite: [
+        "{name} dropped {score} (+{delta}). Huge gain, deeply upsetting.",
+        "{name} crushed the previous best at {score}. I object on principle.",
+      ],
+    },
+    absurd: {
+      awful: [
+        "{name} somehow jumped to {score} (+{delta}). This timeline is broken.",
+        "{name} posted a ridiculous new best: {score}. I am filing a complaint.",
+      ],
+      rough: [
+        "{name} exploded best to {score} (+{delta}). Completely rude.",
+        "{name} made a huge leap to {score}. Statistically offensive.",
+      ],
+      mid: [
+        "{name} launched the best to {score} (+{delta}). Unreasonably strong.",
+        "{name} rewrote your record at {score}. I hate this for me.",
+      ],
+      strong: [
+        "{name} posted {score} (+{delta}). That was a hostile takeover.",
+        "{name} obliterated old best with {score}. I am annoyed and impressed.",
+      ],
+      elite: [
+        "{name} set a monstrous best: {score} (+{delta}). Disgusting excellence.",
+        "{name} hit {score}. Catastrophic improvement. Please calm down.",
+      ],
+    },
   };
   const BASE_MS = 132;
   const SPEEDUP_EVERY = 6;
@@ -440,7 +747,9 @@ async function initSnakeGame() {
   let activeName = "";
   let liveNameCommitTimer = null;
   let lastCommittedName = "";
-  const lastRoastIndexByPool = new Map();
+  let runStartingBest = 0;
+  let runHighScoreTier = null;
+  const lastMessageByChannel = new Map();
 
   function setStatus(text) {
     statusEl.textContent = text;
@@ -493,22 +802,101 @@ async function initSnakeGame() {
     return sanitizeName(name || "", "").toLowerCase();
   }
 
-  function pickRoast(poolKey, lines) {
+  function pickMessage(channelKey, lines) {
     if (!Array.isArray(lines) || !lines.length) return "";
 
-    const previousIndex = Number(lastRoastIndexByPool.get(poolKey));
-    let nextIndex = Math.floor(Math.random() * lines.length);
+    const previousMessage = String(lastMessageByChannel.get(channelKey) || "");
+    let nextMessage = lines[Math.floor(Math.random() * lines.length)];
 
-    if (lines.length > 1 && nextIndex === previousIndex) {
-      nextIndex = (nextIndex + 1 + Math.floor(Math.random() * (lines.length - 1))) % lines.length;
+    if (lines.length > 1 && nextMessage === previousMessage) {
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const candidate = lines[Math.floor(Math.random() * lines.length)];
+        if (candidate !== previousMessage) {
+          nextMessage = candidate;
+          break;
+        }
+      }
     }
 
-    lastRoastIndexByPool.set(poolKey, nextIndex);
-    return lines[nextIndex];
+    lastMessageByChannel.set(channelKey, nextMessage);
+    return nextMessage;
   }
 
   function fillRoast(template, values) {
     return String(template || "").replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
+  }
+
+  function classifyScoreBracket(rawScore) {
+    const scoreValue = Number(rawScore) || 0;
+    if (scoreValue <= 3) return "awful";
+    if (scoreValue <= 10) return "rough";
+    if (scoreValue <= 22) return "mid";
+    if (scoreValue <= 40) return "strong";
+    return "elite";
+  }
+
+  function classifyImprovementTier(rawDelta) {
+    const delta = Math.max(0, Number(rawDelta) || 0);
+    if (delta <= 2) return "tiny";
+    if (delta <= 7) return "moderate";
+    if (delta <= 18) return "big";
+    return "absurd";
+  }
+
+  function classifyNameProfile(rawName) {
+    const name = String(rawName || "");
+    const compact = name.replace(/[\s_-]/g, "");
+    const lowered = compact.toLowerCase();
+    const letters = lowered.replace(/[^a-z]/g, "");
+    const digits = (lowered.match(/[0-9]/g) || []).length;
+    const vowels = (letters.match(/[aeiou]/g) || []).length;
+    const defaultishSet = new Set([
+      "guest",
+      "player",
+      "user",
+      "anon",
+      "anonymous",
+      "default",
+      "newplayer",
+      "snake",
+      "snek",
+      "test",
+      "admin",
+      "name",
+    ]);
+    const repeated = /(.)\1{2,}/i.test(name);
+    const edgy = /(dark|death|doom|killer|slayer|reaper|rage|blood|demon|devil|grim|void|shadow|night|war|lord|king|666|xx+)/i.test(lowered);
+    const allCaps = /[A-Z]/.test(name) && name === name.toUpperCase();
+    const mostlyNumbers = compact.length >= 3 && (digits / Math.max(compact.length, 1)) >= 0.6;
+    const keyboardSmash =
+      letters.length >= 5 &&
+      (vowels / letters.length) < 0.22 &&
+      (new Set(letters.split("")).size / letters.length) > 0.58;
+    const shortName = compact.length > 0 && compact.length <= 3;
+    const longName = compact.length >= 13;
+    const defaultish = defaultishSet.has(lowered);
+
+    let primary = "general";
+    if (defaultish) primary = "defaultish";
+    else if (mostlyNumbers) primary = "numeric";
+    else if (allCaps) primary = "allcaps";
+    else if (keyboardSmash) primary = "smash";
+    else if (repeated) primary = "repeated";
+    else if (edgy) primary = "edgy";
+    else if (shortName) primary = "short";
+    else if (longName) primary = "long";
+
+    const categories = [primary];
+    if (primary !== "allcaps" && allCaps) categories.push("allcaps");
+    if (primary !== "numeric" && mostlyNumbers) categories.push("numeric");
+    if (primary !== "smash" && keyboardSmash) categories.push("smash");
+    if (primary !== "repeated" && repeated) categories.push("repeated");
+    if (primary !== "edgy" && edgy) categories.push("edgy");
+    if (primary !== "short" && shortName) categories.push("short");
+    if (primary !== "long" && longName) categories.push("long");
+    if (!categories.includes("general")) categories.push("general");
+
+    return { categories };
   }
 
   function currentPlayerName() {
@@ -530,10 +918,14 @@ async function initSnakeGame() {
     return highest;
   }
 
-  function syncBestDisplay() {
+  function knownBestForCurrentName() {
     const playerName = activeName || getStoredName() || sanitizeName(playerEl.textContent || "", "");
     const leaderboardBest = getVisibleTopBestForName(playerName);
-    const baselineBest = leaderboardBest === null ? storedBest : leaderboardBest;
+    return leaderboardBest === null ? storedBest : leaderboardBest;
+  }
+
+  function syncBestDisplay() {
+    const baselineBest = knownBestForCurrentName();
     best = Math.max(baselineBest, score);
     bestEl.textContent = String(best);
   }
@@ -550,20 +942,53 @@ async function initSnakeGame() {
     return resolved;
   }
 
-  function showNameRoast(name) {
-    const template = pickRoast("live-name", liveNameRoasts);
+  function showNameRoast(name, source = "live") {
+    const resolvedName = sanitizeName(name || "", "");
+    if (!resolvedName) return;
+
+    const sourcePools = source === "saved" ? nameRoastPools.saved : nameRoastPools.live;
+    const profile = classifyNameProfile(resolvedName);
+    const lines = profile.categories
+      .flatMap((category) => sourcePools[category] || [])
+      .filter(Boolean);
+    const pool = lines.length ? lines : (sourcePools.general || []);
+    const template = pickMessage(`name-${source}`, pool);
     if (!template) return;
-    setNameNote(fillRoast(template, { name }), false);
+    setNameNote(fillRoast(template, { name: resolvedName }), false);
   }
 
-  function showDeathRoast(cause = "generic") {
-    const pool = deathRoasts[cause] || deathRoasts.generic;
-    const template = pickRoast(`death-${cause}`, pool);
+  function showDeathRoast(cause = "generic", finalScore = score) {
+    const scoreBracket = classifyScoreBracket(finalScore);
+    const causePools = deathRoastPools[cause] || deathRoastPools.generic;
+    const pool = causePools[scoreBracket] || deathRoastPools.generic[scoreBracket] || deathRoastPools.generic.mid;
+    const template = pickMessage(`death-${cause}`, pool);
     if (!template) return;
     setNameNote(fillRoast(template, {
       name: currentPlayerName(),
-      score: score,
+      score: finalScore,
     }), true);
+  }
+
+  function showHighScoreRoast(newBestScore, oldBestScore) {
+    const delta = Math.max(0, (Number(newBestScore) || 0) - (Number(oldBestScore) || 0));
+    const improvementTier = classifyImprovementTier(delta);
+    const scoreBracket = classifyScoreBracket(newBestScore);
+    const tierPools = highScoreRoastPools[improvementTier] || highScoreRoastPools.tiny;
+    const pool = tierPools[scoreBracket] || tierPools.mid || highScoreRoastPools.tiny.mid;
+    const template = pickMessage(`highscore-${improvementTier}`, pool);
+    if (!template) return;
+
+    setNameNote(fillRoast(template, {
+      name: currentPlayerName(),
+      score: Number(newBestScore) || 0,
+      oldBest: Number(oldBestScore) || 0,
+      delta,
+    }), false);
+  }
+
+  function updateGameplayBackgroundFps() {
+    if (typeof window.__setStarfieldTargetFps !== "function") return;
+    window.__setStarfieldTargetFps(running && !paused ? 30 : 60);
   }
 
   function commitLiveName(showRoast = true) {
@@ -584,7 +1009,7 @@ async function initSnakeGame() {
 
     localStorage.setItem(LS_NAME, activeName);
     if (showRoast && activeName !== lastCommittedName) {
-      showNameRoast(activeName);
+      showNameRoast(activeName, "live");
     }
     lastCommittedName = activeName;
 
@@ -640,7 +1065,7 @@ async function initSnakeGame() {
     updateNameUi(storedName, { syncInput: true });
     lastCommittedName = storedName;
     if (storedName) {
-      showNameRoast(storedName);
+      showNameRoast(storedName, "saved");
     } else {
       startIdleNameRotation();
     }
@@ -706,6 +1131,13 @@ async function initSnakeGame() {
       localStorage.setItem(LS_BEST, String(storedBest));
     }
     syncBestDisplay();
+
+    if (!running || score <= runStartingBest) return;
+    const nextTier = classifyImprovementTier(score - runStartingBest);
+    if (nextTier !== runHighScoreTier) {
+      runHighScoreTier = nextTier;
+      showHighScoreRoast(score, runStartingBest);
+    }
   }
 
   function dedupeEntries(entries, limit = 10) {
@@ -958,10 +1390,13 @@ async function initSnakeGame() {
 
   function beginRun() {
     if (!ensureNameBeforePlay()) return;
+    runStartingBest = knownBestForCurrentName();
+    runHighScoreTier = null;
     hasStartedOnce = true;
     awaitingRestart = false;
     running = true;
     resetBoard("Playing");
+    updateGameplayBackgroundFps();
     if (!loopActive) {
       loopActive = true;
       requestAnimationFrame(loop);
@@ -985,7 +1420,8 @@ async function initSnakeGame() {
     paused = false;
     awaitingRestart = true;
     setStatus(`${finalStatus} - hit Restart or R`);
-    showDeathRoast(cause);
+    updateGameplayBackgroundFps();
+    showDeathRoast(cause, score);
     saveScoreHistory();
     submitRemoteScore().catch(() => renderLocalLeaderboard());
     if (!firebase || !firestoreApi) {
@@ -1102,6 +1538,7 @@ async function initSnakeGame() {
     accumulator = 0;
     lastTimestamp = 0;
     setStatus(paused ? "Paused" : "Playing");
+    updateGameplayBackgroundFps();
   }
 
   window.addEventListener("keydown", (event) => {
@@ -1180,6 +1617,7 @@ async function initSnakeGame() {
 
   loadName();
   syncBestDisplay();
+  updateGameplayBackgroundFps();
   resizeCanvas();
   window.addEventListener("resize", () => {
     clearTimeout(window.__snakeResizeTimer);
