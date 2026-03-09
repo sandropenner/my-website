@@ -177,7 +177,6 @@ async function initSnakeGame() {
   const statusEl = document.getElementById("status");
   const playerEl = document.getElementById("player-name");
   const nameInput = document.getElementById("name-input");
-  const saveNameBtn = document.getElementById("name-save");
   const nameNoteEl = document.getElementById("name-note");
   const leaderboardEl = document.getElementById("leaderboard");
   const leaderboardNoteEl = document.getElementById("leaderboard-note");
@@ -188,11 +187,77 @@ async function initSnakeGame() {
 
   const CELL = 20;
   const idleNameNotes = [
-    "Pick a player name before the first run, then go commit tasteful reptile crimes.",
-    "Name the creature. It feels weird without paperwork.",
-    "Pick something memorable, stupid, or both.",
-    "A name helps the leaderboard know who to blame.",
+    "Type a name first. Anonymous failure has no legacy.",
+    "Name your snake. We need someone to blame cleanly.",
+    "No name, no run, no excuses. Pick one.",
+    "Give it a name so the leaderboard can laugh correctly.",
   ];
+  const liveNameRoasts = [
+    "Saved as {name}. Have fun introducing your face to walls.",
+    "Saved as {name}. Try not to lose to geometry in under ten seconds.",
+    "Saved as {name}. Big name, tiny survival instincts.",
+    "Saved as {name}. The board is ready to watch this collapse.",
+    "Saved as {name}. Confidence noted. Skill still pending.",
+    "Saved as {name}. This is already aging badly.",
+    "Saved as {name}. Bold choice for someone about to panic-turn.",
+    "Saved as {name}. Great, now your mistakes are branded.",
+    "Saved as {name}. Keep that energy for your next wall impact.",
+    "Saved as {name}. You look like a future cautionary tale.",
+    "Saved as {name}. Peak paperwork before immediate disaster.",
+    "Saved as {name}. Even the snake seems unconvinced.",
+    "Saved as {name}. The leaderboard smells incoming embarrassment.",
+    "Saved as {name}. Fancy label for basic crashing.",
+    "Saved as {name}. Name locked, dignity negotiable.",
+    "Saved as {name}. Very brave for someone steering with vibes.",
+    "Saved as {name}. Excellent, now fail in high definition.",
+    "Saved as {name}. You are one bad turn from comedy.",
+    "Saved as {name}. Try lasting longer than this sentence.",
+    "Saved as {name}. Good luck pretending that crash was intentional.",
+    "Saved as {name}. Looking forward to your dramatic self-own.",
+    "Saved as {name}. Go on, disappoint us with style.",
+    "Saved as {name}. Premium name, budget reflexes.",
+    "Saved as {name}. You are now officially accountable for this mess.",
+  ];
+  const deathRoasts = {
+    wall: [
+      "{name} smacked a wall at {score}. Turns out walls still win.",
+      "{name} met a wall at {score} and lost the negotiation.",
+      "{name} tried to phase through bricks at {score}. Bold and incorrect.",
+      "{name} kissed the boundary at {score}. Very committed.",
+      "{name} hit a wall at {score}. Geometry remains undefeated.",
+      "{name} speedran a wall collision for {score} points of regret.",
+      "{name} saw the edge at {score} and kept going anyway.",
+      "{name} ricocheted off reality at {score}. Spectacular.",
+      "{name} challenged a wall at {score} and got folded.",
+      "{name} made direct eye contact with a wall at {score}.",
+      "{name} reached {score}, then got body-checked by architecture.",
+      "{name} proved at {score} that corners are not optional.",
+    ],
+    self: [
+      "{name} ate their own tail at {score}. Gourmet failure.",
+      "{name} folded into themselves at {score}. Modern art moment.",
+      "{name} tied a knot at {score} and called it strategy.",
+      "{name} outsmarted {name} at {score}. Sadly, in the wrong direction.",
+      "{name} collided with personal history at {score}.",
+      "{name} performed self-sabotage at {score} with zero hesitation.",
+      "{name} looped into self-destruction at {score}. Elegant disaster.",
+      "{name} turned inward at {score} and found consequences.",
+      "{name} hugged their own tail at {score}. Fatal affection.",
+      "{name} made a U-turn into doom at {score}.",
+      "{name} set up a perfect trap for themselves at {score}.",
+      "{name} completed the self-own combo at {score}.",
+    ],
+    generic: [
+      "{name} died at {score}. The snake filed a complaint.",
+      "{name} crashed out at {score}. Stunning lack of restraint.",
+      "{name} is done at {score}. Performance art level collapse.",
+      "{name} faceplanted at {score}. Please clap politely.",
+      "{name} reached {score} before the universe corrected things.",
+      "{name} exploded their run at {score}. Clean ending.",
+      "{name} got deleted at {score}. Tough scene.",
+      "{name} ended at {score}. The walls are still laughing.",
+    ],
+  };
   const BASE_MS = 125;
   const SPEEDUP_EVERY = 5;
   const SPEED_FACTOR = 0.92;
@@ -249,6 +314,10 @@ async function initSnakeGame() {
   let nameNoteTimer = null;
   let nameNoteIndex = 0;
   let visibleLeaderboardEntries = [];
+  let activeName = "";
+  let liveNameCommitTimer = null;
+  let lastCommittedName = "";
+  const lastRoastIndexByPool = new Map();
 
   function setStatus(text) {
     statusEl.textContent = text;
@@ -263,7 +332,7 @@ async function initSnakeGame() {
   }
 
   function startIdleNameRotation() {
-    if (!nameNoteEl || getStoredName()) return;
+    if (!nameNoteEl || activeName) return;
     stopIdleNameRotation();
 
     const rotate = () => {
@@ -297,18 +366,40 @@ async function initSnakeGame() {
     return sanitizeName(localStorage.getItem(LS_NAME) || "", "");
   }
 
+  function normalizeNameForMatch(name) {
+    return sanitizeName(name || "", "").toLowerCase();
+  }
+
+  function pickRoast(poolKey, lines) {
+    if (!Array.isArray(lines) || !lines.length) return "";
+
+    const previousIndex = Number(lastRoastIndexByPool.get(poolKey));
+    let nextIndex = Math.floor(Math.random() * lines.length);
+
+    if (lines.length > 1 && nextIndex === previousIndex) {
+      nextIndex = (nextIndex + 1 + Math.floor(Math.random() * (lines.length - 1))) % lines.length;
+    }
+
+    lastRoastIndexByPool.set(poolKey, nextIndex);
+    return lines[nextIndex];
+  }
+
+  function fillRoast(template, values) {
+    return String(template || "").replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
+  }
+
   function currentPlayerName() {
-    return sanitizeName(playerEl.textContent || "", "Guest");
+    return activeName || sanitizeName(playerEl.textContent || "", "Guest");
   }
 
   function getVisibleTopBestForName(name) {
-    if (!name) return null;
-    const targetId = nameToDocId(name);
+    const targetName = normalizeNameForMatch(name);
+    if (!targetName) return null;
     let highest = null;
 
     visibleLeaderboardEntries.forEach((entry) => {
-      const entryId = nameToDocId(sanitizeName(entry.name || "", ""));
-      if (entryId !== targetId) return;
+      const entryName = normalizeNameForMatch(entry.name || "");
+      if (!entryName || entryName !== targetName) return;
       const scoreValue = Number(entry.score) || 0;
       highest = highest === null ? scoreValue : Math.max(highest, scoreValue);
     });
@@ -317,42 +408,62 @@ async function initSnakeGame() {
   }
 
   function syncBestDisplay() {
-    const playerName = getStoredName() || sanitizeName(playerEl.textContent || "", "");
+    const playerName = activeName || getStoredName() || sanitizeName(playerEl.textContent || "", "");
     const leaderboardBest = getVisibleTopBestForName(playerName);
     const baselineBest = leaderboardBest === null ? storedBest : leaderboardBest;
     best = Math.max(baselineBest, score);
     bestEl.textContent = String(best);
   }
 
-  function updateNameUi(name) {
+  function updateNameUi(name, options = {}) {
+    const { syncInput = false } = options;
     const resolved = sanitizeName(name || "", "");
+    activeName = resolved;
     playerEl.textContent = resolved || "Unset";
-    nameInput.value = resolved;
-    if (resolved) {
-      setNameNote(`Saved as ${resolved}. Good enough.`, false);
-    } else {
-      startIdleNameRotation();
+    if (syncInput) {
+      nameInput.value = resolved;
     }
     syncBestDisplay();
+    return resolved;
   }
 
-  function saveName() {
-    const name = sanitizeName(nameInput.value, "");
-    if (!name) {
+  function showNameRoast(name) {
+    const template = pickRoast("live-name", liveNameRoasts);
+    if (!template) return;
+    setNameNote(fillRoast(template, { name }), false);
+  }
+
+  function showDeathRoast(cause = "generic") {
+    const pool = deathRoasts[cause] || deathRoasts.generic;
+    const template = pickRoast(`death-${cause}`, pool);
+    if (!template) return;
+    setNameNote(fillRoast(template, {
+      name: currentPlayerName(),
+      score: score,
+    }), true);
+  }
+
+  function commitLiveName(showRoast = true) {
+    if (liveNameCommitTimer) {
+      window.clearTimeout(liveNameCommitTimer);
+      liveNameCommitTimer = null;
+    }
+
+    if (!activeName) {
       localStorage.removeItem(LS_NAME);
-      playerEl.textContent = "Unset";
-      nameInput.value = "";
-      setNameNote("Enter a player name first.", true);
-      syncBestDisplay();
+      lastCommittedName = "";
       if (!running && !hasStartedOnce) {
         setStatus("Pick a name");
       }
-      nameInput.focus();
+      startIdleNameRotation();
       return false;
     }
 
-    localStorage.setItem(LS_NAME, name);
-    updateNameUi(name);
+    localStorage.setItem(LS_NAME, activeName);
+    if (showRoast && activeName !== lastCommittedName) {
+      showNameRoast(activeName);
+    }
+    lastCommittedName = activeName;
 
     if (!running) {
       setStatus(awaitingRestart ? "Waiting for restart" : "Ready");
@@ -360,8 +471,35 @@ async function initSnakeGame() {
     return true;
   }
 
+  function scheduleLiveNameCommit() {
+    if (liveNameCommitTimer) {
+      window.clearTimeout(liveNameCommitTimer);
+    }
+    liveNameCommitTimer = window.setTimeout(() => {
+      commitLiveName(true);
+    }, 180);
+  }
+
+  function handleNameInput() {
+    const nextName = updateNameUi(nameInput.value);
+    if (!nextName) {
+      setNameNote("Enter a name so your failures have legal ownership.", true);
+      if (!running && !hasStartedOnce) {
+        setStatus("Pick a name");
+      }
+      scheduleLiveNameCommit();
+      return;
+    }
+    scheduleLiveNameCommit();
+  }
+
   function ensureNameBeforePlay() {
-    if (getStoredName()) return true;
+    if (activeName) return true;
+    updateNameUi(nameInput.value);
+    if (activeName) {
+      commitLiveName(false);
+      return true;
+    }
     setStatus("Pick a name");
     setNameNote("You need a player name before the first run.", true);
     nameInput.focus();
@@ -375,7 +513,14 @@ async function initSnakeGame() {
   }
 
   function loadName() {
-    updateNameUi(getStoredName());
+    const storedName = getStoredName();
+    updateNameUi(storedName, { syncInput: true });
+    lastCommittedName = storedName;
+    if (storedName) {
+      showNameRoast(storedName);
+    } else {
+      startIdleNameRotation();
+    }
   }
 
   function resizeCanvas() {
@@ -402,7 +547,7 @@ async function initSnakeGame() {
     boardOffsetY = Math.floor((logicalHeight - boardHeight) / 2);
 
     if (snake.length === 0) {
-      resetBoard(getStoredName() ? "Ready" : "Pick a name");
+      resetBoard(activeName ? "Ready" : "Pick a name");
     } else {
       draw();
     }
@@ -712,11 +857,12 @@ async function initSnakeGame() {
     beginRun();
   }
 
-  function stopGame(finalStatus = "Game over") {
+  function stopGame(cause = "generic", finalStatus = "Game over") {
     running = false;
     paused = false;
     awaitingRestart = true;
-    setStatus(`${finalStatus} — hit Restart or R`);
+    setStatus(`${finalStatus} - hit Restart or R`);
+    showDeathRoast(cause);
     saveScoreHistory();
     submitRemoteScore().catch(() => renderLocalLeaderboard());
     if (!firebase || !firestoreApi) {
@@ -756,8 +902,13 @@ async function initSnakeGame() {
 
     const hitSelf = snake.some((part, index) => index > 0 && part.x === head.x && part.y === head.y);
 
-    if (hitWall || hitSelf) {
-      stopGame("Game over");
+    if (hitWall) {
+      stopGame("wall", "Game over");
+      return;
+    }
+
+    if (hitSelf) {
+      stopGame("self", "Game over");
       return;
     }
 
@@ -890,13 +1041,18 @@ async function initSnakeGame() {
   startBtn.addEventListener("click", startGame);
   pauseBtn.addEventListener("click", togglePause);
   restartBtn.addEventListener("click", restartGame);
-  saveNameBtn.addEventListener("click", saveName);
+  nameInput.addEventListener("input", handleNameInput);
   nameInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      saveName();
+      updateNameUi(nameInput.value, { syncInput: true });
+      commitLiveName(true);
       nameInput.blur();
     }
+  });
+  nameInput.addEventListener("blur", () => {
+    updateNameUi(nameInput.value, { syncInput: true });
+    commitLiveName(true);
   });
 
   loadName();
@@ -910,10 +1066,7 @@ async function initSnakeGame() {
     }, 80);
   });
 
-  resetBoard(getStoredName() ? "Ready" : "Pick a name");
-  if (!getStoredName()) {
-    startIdleNameRotation();
-  }
+  resetBoard(activeName ? "Ready" : "Pick a name");
   renderLocalLeaderboard();
   await bootRemoteLeaderboard();
   syncLeaderboardHeight();
