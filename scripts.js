@@ -4,11 +4,91 @@ document.addEventListener("DOMContentLoaded", () => {
     yearEl.textContent = String(new Date().getFullYear());
   }
 
+  initPagePrefetching();
   initStarfield();
   initNavMenus();
   initRotatingText();
-  initSnakeGame();
+  if ((document.body && document.body.dataset.page === "snek") || document.getElementById("snake-canvas")) {
+    initSnakeGame();
+  }
 });
+
+function initPagePrefetching() {
+  const linkEl = document.createElement("link");
+  const supportsPrefetch = !!(linkEl.relList && typeof linkEl.relList.supports === "function" && linkEl.relList.supports("prefetch"));
+  if (!supportsPrefetch) return;
+
+  const prefetched = new Set();
+
+  function toPrefetchUrl(rawHref) {
+    try {
+      const url = new URL(rawHref, window.location.href);
+      if (url.origin !== window.location.origin) return null;
+      if (!/^https?:$/.test(url.protocol)) return null;
+      if (url.pathname === window.location.pathname && url.search === window.location.search) return null;
+      url.hash = "";
+      return url.toString();
+    } catch {
+      return null;
+    }
+  }
+
+  function isInternalLink(anchor) {
+    if (!anchor || !anchor.href) return false;
+    if (anchor.hasAttribute("download")) return false;
+
+    const target = (anchor.getAttribute("target") || "").toLowerCase();
+    if (target && target !== "_self") return false;
+
+    const rel = (anchor.getAttribute("rel") || "").toLowerCase();
+    if (rel.includes("external")) return false;
+
+    return !!toPrefetchUrl(anchor.href);
+  }
+
+  function prefetchHref(rawHref) {
+    const normalizedUrl = toPrefetchUrl(rawHref);
+    if (!normalizedUrl || prefetched.has(normalizedUrl)) return;
+
+    const prefetchLink = document.createElement("link");
+    prefetchLink.rel = "prefetch";
+    prefetchLink.as = "document";
+    prefetchLink.href = normalizedUrl;
+    document.head.appendChild(prefetchLink);
+    prefetched.add(normalizedUrl);
+  }
+
+  const prefetchableAnchors = Array.from(document.querySelectorAll("a[href]")).filter(isInternalLink);
+  prefetchableAnchors.forEach((anchor) => {
+    const warm = () => prefetchHref(anchor.href);
+    anchor.addEventListener("mouseenter", warm, { passive: true });
+    anchor.addEventListener("focus", warm);
+    anchor.addEventListener("touchstart", warm, { passive: true });
+  });
+
+  const likelyAnchors = Array.from(document.querySelectorAll(".site-nav a[href], .footer-links a[href], .hero-actions a[href]"));
+  const idleCandidates = Array.from(new Set(
+    likelyAnchors
+      .filter(isInternalLink)
+      .map((anchor) => toPrefetchUrl(anchor.href))
+      .filter(Boolean),
+  )).slice(0, 2);
+
+  if (!idleCandidates.length) return;
+
+  const scheduleIdle = window.requestIdleCallback
+    ? (callback) => window.requestIdleCallback(callback, { timeout: 1800 })
+    : (callback) => window.setTimeout(() => callback(null), 1400);
+
+  scheduleIdle((deadline) => {
+    idleCandidates.forEach((href, index) => {
+      if (deadline && typeof deadline.timeRemaining === "function" && index > 0 && deadline.timeRemaining() < 5) {
+        return;
+      }
+      prefetchHref(href);
+    });
+  });
+}
 
 function initStarfield() {
   const canvas = document.getElementById("starfield");
@@ -20,6 +100,10 @@ function initStarfield() {
   let stars = [];
   let shootingStar = null;
   let lastShot = 0;
+  let glowGradient = null;
+  let starfieldRaf = 0;
+  let starfieldActive = false;
+  let resizeTimer = 0;
 
   function resizeStarfield() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -32,6 +116,11 @@ function initStarfield() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
     buildStars();
+
+    glowGradient = ctx.createRadialGradient(width * 0.15, height * 1.05, 0, width * 0.15, height * 1.05, width * 0.72);
+    glowGradient.addColorStop(0, "rgba(47, 90, 255, 0.24)");
+    glowGradient.addColorStop(0.38, "rgba(18, 45, 120, 0.12)");
+    glowGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
   }
 
   function buildStars() {
@@ -85,22 +174,21 @@ function initStarfield() {
   }
 
   function animateStarfield(timestamp = 0) {
+    if (!starfieldActive) return;
     ctx.clearRect(0, 0, width, height);
 
-    const glow = ctx.createRadialGradient(width * 0.15, height * 1.05, 0, width * 0.15, height * 1.05, width * 0.72);
-    glow.addColorStop(0, "rgba(47, 90, 255, 0.24)");
-    glow.addColorStop(0.38, "rgba(18, 45, 120, 0.12)");
-    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, width, height);
+    if (glowGradient) {
+      ctx.fillStyle = glowGradient;
+      ctx.fillRect(0, 0, width, height);
+    }
 
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = "rgba(255, 255, 255, 0.3)";
     for (const star of stars) {
       const alpha = star.alpha + Math.sin(timestamp * star.speed + star.pulse) * 0.18;
       ctx.beginPath();
       ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.08, alpha)})`;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = "rgba(255, 255, 255, 0.3)";
       ctx.fill();
     }
     ctx.shadowBlur = 0;
@@ -110,12 +198,46 @@ function initStarfield() {
     }
     drawShot();
 
-    window.requestAnimationFrame(animateStarfield);
+    starfieldRaf = window.requestAnimationFrame(animateStarfield);
+  }
+
+  function startStarfield() {
+    if (starfieldActive) return;
+    starfieldActive = true;
+    starfieldRaf = window.requestAnimationFrame(animateStarfield);
+  }
+
+  function stopStarfield() {
+    starfieldActive = false;
+    if (starfieldRaf) {
+      window.cancelAnimationFrame(starfieldRaf);
+      starfieldRaf = 0;
+    }
   }
 
   resizeStarfield();
-  animateStarfield();
-  window.addEventListener("resize", resizeStarfield);
+  if (!document.hidden) {
+    startStarfield();
+  }
+
+  window.addEventListener("resize", () => {
+    if (resizeTimer) {
+      window.clearTimeout(resizeTimer);
+    }
+    resizeTimer = window.setTimeout(() => {
+      resizeTimer = 0;
+      resizeStarfield();
+    }, 80);
+  }, { passive: true });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      stopStarfield();
+      return;
+    }
+    lastShot = performance.now();
+    startStarfield();
+  });
 }
 
 function initNavMenus() {
@@ -258,9 +380,10 @@ async function initSnakeGame() {
       "{name} ended at {score}. The walls are still laughing.",
     ],
   };
-  const BASE_MS = 125;
-  const SPEEDUP_EVERY = 5;
-  const SPEED_FACTOR = 0.92;
+  const BASE_MS = 132;
+  const SPEEDUP_EVERY = 6;
+  const SPEED_FACTOR = 0.96;
+  const MIN_TICK_MS = 64;
   const LS_NAME = "portfolio_snake_player_name";
   const LS_BEST = "portfolio_snake_best_score";
   const LS_SCORES = "portfolio_snake_recent_scores";
@@ -875,7 +998,7 @@ async function initSnakeGame() {
     scoreEl.textContent = String(score);
     updateBest();
     if (score % SPEEDUP_EVERY === 0) {
-      tickMs = Math.max(55, tickMs * SPEED_FACTOR);
+      tickMs = Math.max(MIN_TICK_MS, tickMs * SPEED_FACTOR);
     }
     food = randomFoodPosition();
   }
