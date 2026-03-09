@@ -1,1 +1,0 @@
-Deploy the contents of this folder to the root of your GitHub Pages repo. Clean URLs now use folders with index.html: /projects/, /snek/, /contact/. Legacy .html files redirect to the clean paths.
