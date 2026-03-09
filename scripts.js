@@ -186,13 +186,6 @@ async function initSnakeGame() {
   const pauseBtn = document.getElementById("btn-pause");
   const restartBtn = document.getElementById("btn-restart");
 
-  const dpad = {
-    up: document.getElementById("m-up"),
-    left: document.getElementById("m-left"),
-    down: document.getElementById("m-down"),
-    right: document.getElementById("m-right"),
-  };
-
   const CELL = 20;
   const idleNameNotes = [
     "Pick a player name before the first run, then go commit tasteful reptile crimes.",
@@ -238,7 +231,8 @@ async function initSnakeGame() {
   let snake = [];
   let food = { x: 0, y: 0 };
   let score = 0;
-  let best = Number(localStorage.getItem(LS_BEST) || 0);
+  let storedBest = Number(localStorage.getItem(LS_BEST) || 0);
+  let best = storedBest;
   let direction = { x: 0, y: 0 };
   let queuedDirections = [];
   let running = false;
@@ -254,9 +248,11 @@ async function initSnakeGame() {
   let firestoreApi = null;
   let nameNoteTimer = null;
   let nameNoteIndex = 0;
+  let visibleLeaderboardEntries = [];
 
   function setStatus(text) {
     statusEl.textContent = text;
+    statusEl.title = text;
   }
 
   function stopIdleNameRotation() {
@@ -305,6 +301,29 @@ async function initSnakeGame() {
     return sanitizeName(playerEl.textContent || "", "Guest");
   }
 
+  function getVisibleTopBestForName(name) {
+    if (!name) return null;
+    const targetId = nameToDocId(name);
+    let highest = null;
+
+    visibleLeaderboardEntries.forEach((entry) => {
+      const entryId = nameToDocId(sanitizeName(entry.name || "", ""));
+      if (entryId !== targetId) return;
+      const scoreValue = Number(entry.score) || 0;
+      highest = highest === null ? scoreValue : Math.max(highest, scoreValue);
+    });
+
+    return highest;
+  }
+
+  function syncBestDisplay() {
+    const playerName = getStoredName() || sanitizeName(playerEl.textContent || "", "");
+    const leaderboardBest = getVisibleTopBestForName(playerName);
+    const baselineBest = leaderboardBest === null ? storedBest : leaderboardBest;
+    best = Math.max(baselineBest, score);
+    bestEl.textContent = String(best);
+  }
+
   function updateNameUi(name) {
     const resolved = sanitizeName(name || "", "");
     playerEl.textContent = resolved || "Unset";
@@ -314,6 +333,7 @@ async function initSnakeGame() {
     } else {
       startIdleNameRotation();
     }
+    syncBestDisplay();
   }
 
   function saveName() {
@@ -323,6 +343,7 @@ async function initSnakeGame() {
       playerEl.textContent = "Unset";
       nameInput.value = "";
       setNameNote("Enter a player name first.", true);
+      syncBestDisplay();
       if (!running && !hasStartedOnce) {
         setStatus("Pick a name");
       }
@@ -412,11 +433,11 @@ async function initSnakeGame() {
   }
 
   function updateBest() {
-    if (score > best) {
-      best = score;
-      localStorage.setItem(LS_BEST, String(best));
-      bestEl.textContent = String(best);
+    if (score > storedBest) {
+      storedBest = score;
+      localStorage.setItem(LS_BEST, String(storedBest));
     }
+    syncBestDisplay();
   }
 
   function dedupeEntries(entries, limit = 10) {
@@ -460,14 +481,23 @@ async function initSnakeGame() {
   }
 
   function renderLeaderboardRows(entries) {
+    const visibleRows = (Array.isArray(entries) ? entries : [])
+      .slice(0, 10)
+      .map((entry) => ({
+        name: sanitizeName(entry.name || "Guest"),
+        score: Number(entry.score) || 0,
+      }));
+
+    visibleLeaderboardEntries = visibleRows;
     leaderboardEl.innerHTML = "";
 
-    if (!entries.length) {
+    if (!visibleRows.length) {
       leaderboardEl.textContent = "No runs yet. Go crash into a wall with purpose.";
+      syncBestDisplay();
       return;
     }
 
-    entries.forEach((entry, index) => {
+    visibleRows.forEach((entry, index) => {
       const row = document.createElement("div");
       row.className = "score-row";
 
@@ -486,6 +516,8 @@ async function initSnakeGame() {
       row.append(rank, name, value);
       leaderboardEl.appendChild(row);
     });
+
+    syncBestDisplay();
   }
 
   function renderLocalLeaderboard() {
@@ -651,6 +683,7 @@ async function initSnakeGame() {
     lastTimestamp = 0;
     paused = false;
     scoreEl.textContent = "0";
+    syncBestDisplay();
     setStatus(statusText);
     draw();
   }
@@ -814,16 +847,30 @@ async function initSnakeGame() {
   let touchStart = null;
   canvas.addEventListener("touchstart", (event) => {
     const touch = event.touches[0];
+    if (!touch) return;
     touchStart = { x: touch.clientX, y: touch.clientY };
-  }, { passive: true });
+    event.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener("touchmove", (event) => {
+    if (!touchStart) return;
+    event.preventDefault();
+  }, { passive: false });
 
   canvas.addEventListener("touchend", (event) => {
-    if (!touchStart || !running) return;
+    if (!touchStart) return;
+    event.preventDefault();
 
     const touch = event.changedTouches[0];
+    if (!touch) {
+      touchStart = null;
+      return;
+    }
     const dx = touch.clientX - touchStart.x;
     const dy = touch.clientY - touchStart.y;
     touchStart = null;
+
+    if (!running) return;
 
     if (Math.abs(dx) > Math.abs(dy)) {
       queueDirection(dx > 0 ? 1 : -1, 0);
@@ -834,12 +881,11 @@ async function initSnakeGame() {
     if (navigator.vibrate) {
       navigator.vibrate(10);
     }
-  }, { passive: true });
+  }, { passive: false });
 
-  dpad.up.addEventListener("click", () => queueDirection(0, -1));
-  dpad.left.addEventListener("click", () => queueDirection(-1, 0));
-  dpad.down.addEventListener("click", () => queueDirection(0, 1));
-  dpad.right.addEventListener("click", () => queueDirection(1, 0));
+  canvas.addEventListener("touchcancel", () => {
+    touchStart = null;
+  }, { passive: true });
 
   startBtn.addEventListener("click", startGame);
   pauseBtn.addEventListener("click", togglePause);
@@ -853,8 +899,8 @@ async function initSnakeGame() {
     }
   });
 
-  bestEl.textContent = String(best);
   loadName();
+  syncBestDisplay();
   resizeCanvas();
   window.addEventListener("resize", () => {
     clearTimeout(window.__snakeResizeTimer);
