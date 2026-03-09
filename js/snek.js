@@ -20,295 +20,41 @@ async function initSnakeGame() {
   const restartBtn = document.getElementById("btn-restart");
 
   const CELL = 20;
-  const idleNameNotes = [
-    "Type a name first. Anonymous failure has no legacy.",
-    "Name your snake. We need someone to blame cleanly.",
-    "No name, no run, no excuses. Pick one.",
-    "Give it a name so the leaderboard can laugh correctly.",
-    "No paperwork, no public shaming.",
-    "Enter a name. The wall wants a target.",
-  ];
-  const nameRoastPools = {
-    live: {
-      defaultish: [
-        "Saved as {name}. Brave to pick the default setting for your identity.",
-        "Saved as {name}. Corporate placeholder energy, zero shame.",
-        "Saved as {name}. Your creativity died before the first turn.",
-        "Saved as {name}. The walls did not need this little effort.",
-      ],
-      short: [
-        "Saved as {name}. Short name, short fuse, short run incoming.",
-        "Saved as {name}. Minimal letters, maximal liability.",
-        "Saved as {name}. Compact branding for compact disasters.",
-        "Saved as {name}. Cute and efficient, like your future crash.",
-      ],
-      long: [
-        "Saved as {name}. Long name, same tiny reaction time.",
-        "Saved as {name}. You spent all your budget on syllables.",
-        "Saved as {name}. Epic title, beginner movement.",
-        "Saved as {name}. Novel length identity, speedrun lifespan.",
-      ],
-      allcaps: [
-        "Saved as {name}. All caps cannot out-yell the wall.",
-        "Saved as {name}. Loud typography, quiet skill.",
-        "Saved as {name}. Shouting noted. Directional competence not found.",
-        "Saved as {name}. Peak volume, average survival.",
-      ],
-      numeric: [
-        "Saved as {name}. Serial number confirmed. Human judgement unclear.",
-        "Saved as {name}. Looks like a password, plays like a mistake.",
-        "Saved as {name}. Spreadsheet name, tragic pathing.",
-        "Saved as {name}. You named yourself a code and still decode into walls.",
-      ],
-      smash: [
-        "Saved as {name}. That name looks like a keyboard panic.",
-        "Saved as {name}. Excellent gibberish, suspiciously on-brand.",
-        "Saved as {name}. Did your cat file this name for you?",
-        "Saved as {name}. Random letters, consistent failure trajectory.",
-      ],
-      repeated: [
-        "Saved as {name}. Repeating letters like your mistakes.",
-        "Saved as {name}. Pattern detected: commitment to bad loops.",
-        "Saved as {name}. You really trusted one letter this much.",
-        "Saved as {name}. Duplicate characters, duplicate regrets.",
-      ],
-      edgy: [
-        "Saved as {name}. Dark name, bright wall impact.",
-        "Saved as {name}. Intimidating label, very calm collapse.",
-        "Saved as {name}. Villain branding, side-character reflexes.",
-        "Saved as {name}. You named a final boss and drove like an intern.",
-      ],
-      general: [
-        "Saved as {name}. The board is eager to witness your decline.",
-        "Saved as {name}. Confidence entered the chat. Skill is buffering.",
-        "Saved as {name}. Premium label, discount decision making.",
-        "Saved as {name}. The snake has concerns and no legal defense.",
-        "Saved as {name}. You are now accountable for this timeline.",
-        "Saved as {name}. Good. Your failures are now properly attributed.",
-      ],
-    },
-    saved: {
-      defaultish: [
-        "{name} was loaded from storage. Still generic, still cursed.",
-        "{name} is back. The minimum effort legend continues.",
-        "{name} restored. Originality remains on leave.",
-      ],
-      short: [
-        "{name} restored. Efficient branding for inefficient steering.",
-        "{name} loaded. Tiny name, big collision energy.",
-        "{name} is back. Still concise, still dangerous to yourself.",
-      ],
-      long: [
-        "{name} restored. Long name, short patience.",
-        "{name} loaded. Dramatic title, familiar problems.",
-        "{name} is back. Still overnamed, still underprepared.",
-      ],
-      allcaps: [
-        "{name} restored in full volume.",
-        "{name} loaded. Still yelling into the void.",
-        "{name} is back. Caps lock could not save you.",
-      ],
-      numeric: [
-        "{name} restored. Barcode personality, human errors.",
-        "{name} loaded. Numeric identity, emotional gameplay.",
-        "{name} is back. Still reading like a failed unlock code.",
-      ],
-      smash: [
-        "{name} restored. Keyboard chaos returns.",
-        "{name} loaded. Random letters, predictable outcomes.",
-        "{name} is back. Still looks like a panic typo.",
-      ],
-      repeated: [
-        "{name} restored. Repetition is your lifestyle.",
-        "{name} loaded. Echoed letters, echoed mistakes.",
-        "{name} is back. Loop behavior confirmed.",
-      ],
-      edgy: [
-        "{name} restored. Edgy name, same fragile route.",
-        "{name} loaded. Grim branding, comedic endings.",
-        "{name} is back. Menacing title, polite crash speed.",
-      ],
-      general: [
-        "{name} restored. History has resumed its bad decisions.",
-        "{name} loaded. Welcome back to intentional chaos.",
-        "{name} is back. The walls remember you.",
-        "{name} restored. Legacy mode: public embarrassment.",
-      ],
-    },
+  const snekMessageData = (window.SiteData && window.SiteData.snekMessages) || {};
+  const fallbackMessage = ["You broke it. Again. Impressively."];
+  const fallbackNamePools = {
+    live: { general: ["Saved as {name}. Proceed with controlled incompetence."] },
+    saved: { general: ["{name} restored. Legacy nonsense continues."] },
   };
-  const deathRoastPools = {
-    wall: {
-      awful: [
-        "{name} hit a wall at {score}. Fastest route to humiliation found.",
-        "{name} reached {score} and headbutted architecture.",
-        "{name} lost to a straight line at {score}.",
-      ],
-      rough: [
-        "{name} met the boundary at {score}. Early and loud.",
-        "{name} clipped a wall at {score}. Confidence exceeded skill.",
-        "{name} reached {score} then argued with concrete.",
-      ],
-      mid: [
-        "{name} hit a wall at {score}. Respectable run, bad ending.",
-        "{name} made it to {score}, then forgot edges exist.",
-        "{name} reached {score} and donated the run to geometry.",
-      ],
-      strong: [
-        "{name} posted {score} then threw it at a wall.",
-        "{name} had {score} and still picked brick as a destination.",
-        "{name} got to {score}. Choke delivered with precision.",
-      ],
-      elite: [
-        "{name} reached {score} and still died to a wall. Historic throw.",
-        "{name} had a monster run at {score}, then faceplanted the border.",
-        "{name} scored {score} and ended it with premium stupidity.",
-      ],
-    },
-    self: {
-      awful: [
-        "{name} self-collided at {score}. You trapped yourself immediately.",
-        "{name} tied a knot at {score}. Catastrophically efficient.",
-        "{name} hit your own tail at {score}. Friendly fire speedrun.",
-      ],
-      rough: [
-        "{name} folded into yourself at {score}. Artistic but fatal.",
-        "{name} reached {score} then body-checked your own history.",
-        "{name} self-destructed at {score}. Very on-brand.",
-      ],
-      mid: [
-        "{name} self-collided at {score}. Decent run, tragic awareness.",
-        "{name} reached {score} then invented a personal traffic jam.",
-        "{name} looped into doom at {score}.",
-      ],
-      strong: [
-        "{name} had {score} and still ate your own tail.",
-        "{name} reached {score}, then executed a deluxe self-own.",
-        "{name} put up {score} and lost to yourself anyway.",
-      ],
-      elite: [
-        "{name} reached {score} and still managed self-sabotage.",
-        "{name} had an elite run at {score}, then folded in half.",
-        "{name} posted {score}. Final boss defeated: yourself.",
-      ],
-    },
-    generic: {
-      awful: [
-        "{name} died at {score}. Not even the warmup survived.",
-        "{name} ended at {score}. Brief, loud, memorable for bad reasons.",
-        "{name} crashed at {score}. The snake did not consent to this.",
-      ],
-      rough: [
-        "{name} died at {score}. Enough to hurt, not enough to brag.",
-        "{name} finished at {score}. Mediocre chaos achieved.",
-        "{name} ended at {score}. Tragic middle-management energy.",
-      ],
-      mid: [
-        "{name} died at {score}. Solid run, criminal finish.",
-        "{name} ended at {score}. Good effort, questionable final turn.",
-        "{name} crashed at {score}. Could have been worse, somehow.",
-      ],
-      strong: [
-        "{name} died at {score}. Strong run, catastrophic closing act.",
-        "{name} ended at {score}. That was almost respectable.",
-        "{name} finished at {score}. Painful but impressive.",
-      ],
-      elite: [
-        "{name} died at {score}. Elite score, deeply cursed ending.",
-        "{name} ended at {score}. The throw was cinematic.",
-        "{name} crashed at {score}. Everyone is both impressed and upset.",
-      ],
-    },
+  const fallbackDeathPools = {
+    generic: { mid: ["{name} died at {score}. Tragic and fully expected."] },
   };
-  const highScoreRoastPools = {
-    tiny: {
-      awful: [
-        "{name} set a new best: {score}. Improvement by inches, ego by miles.",
-        "{name} new best {score} (+{delta}). Barely progress, still progress.",
-      ],
-      rough: [
-        "{name} new best {score} (+{delta}). Congratulations on minimal growth.",
-        "{name} improved to {score}. Tiny upgrade, loud celebration pending.",
-      ],
-      mid: [
-        "{name} nudged the best to {score} (+{delta}). Reluctantly noted.",
-        "{name} squeezed out a new best: {score}. Bare minimum heroics.",
-      ],
-      strong: [
-        "{name} hit a new best of {score} by {delta}. Annoyingly competent.",
-        "{name} updated best to {score}. Small delta, large attitude.",
-      ],
-      elite: [
-        "{name} reached {score} and still only beat best by {delta}. Petty greatness.",
-        "{name} new best {score}. Tiny margin, massive smug potential.",
-      ],
-    },
-    moderate: {
-      awful: [
-        "{name} raised best to {score} (+{delta}). Unpleasantly effective.",
-        "{name} improved by {delta} to {score}. Better than expected.",
-      ],
-      rough: [
-        "{name} new best {score} (+{delta}). Fine. Keep acting surprised.",
-        "{name} moved the record to {score}. This is becoming a pattern.",
-      ],
-      mid: [
-        "{name} posted a new best: {score} (+{delta}). I hate to admit that was solid.",
-        "{name} improved to {score}. Moderate jump, maximum annoyance.",
-      ],
-      strong: [
-        "{name} shoved best to {score} (+{delta}). Reluctant respect granted.",
-        "{name} dropped a real upgrade: {score}. This is getting inconvenient.",
-      ],
-      elite: [
-        "{name} reached {score} (+{delta}). You are making this harder to mock.",
-        "{name} set best to {score}. The snake is visibly annoyed.",
-      ],
-    },
-    big: {
-      awful: [
-        "{name} leaped to {score} (+{delta}). Suddenly competent and obnoxious.",
-        "{name} nuked the old best with {score}. Disturbing behavior.",
-      ],
-      rough: [
-        "{name} smashed best to {score} (+{delta}). That was not supposed to happen.",
-        "{name} jumped by {delta} to {score}. Someone has been practicing, sadly.",
-      ],
-      mid: [
-        "{name} blasted past old best: {score} (+{delta}). Painfully legit.",
-        "{name} posted {score}. Big jump. Terrible for my narrative.",
-      ],
-      strong: [
-        "{name} detonated the old record with {score} (+{delta}). Grossly effective.",
-        "{name} hit {score}. Large improvement. Confidence now unbearable.",
-      ],
-      elite: [
-        "{name} dropped {score} (+{delta}). Huge gain, deeply upsetting.",
-        "{name} crushed the previous best at {score}. I object on principle.",
-      ],
-    },
-    absurd: {
-      awful: [
-        "{name} somehow jumped to {score} (+{delta}). This timeline is broken.",
-        "{name} posted a ridiculous new best: {score}. I am filing a complaint.",
-      ],
-      rough: [
-        "{name} exploded best to {score} (+{delta}). Completely rude.",
-        "{name} made a huge leap to {score}. Statistically offensive.",
-      ],
-      mid: [
-        "{name} launched the best to {score} (+{delta}). Unreasonably strong.",
-        "{name} rewrote your record at {score}. I hate this for me.",
-      ],
-      strong: [
-        "{name} posted {score} (+{delta}). That was a hostile takeover.",
-        "{name} obliterated old best with {score}. I am annoyed and impressed.",
-      ],
-      elite: [
-        "{name} set a monstrous best: {score} (+{delta}). Disgusting excellence.",
-        "{name} hit {score}. Catastrophic improvement. Please calm down.",
-      ],
-    },
+  const fallbackHighScorePools = {
+    tiny: { mid: ["{name} new best {score} (+{delta}). Noted with suspicion."] },
   };
+  const fallbackClassification = {
+    defaultishNames: ["guest", "player", "user", "anon", "default", "test", "admin", "name"],
+    edgyTokens: ["dark", "death", "doom", "killer", "slayer", "reaper", "blood", "demon", "grim", "void", "shadow", "666", "xx"],
+  };
+
+  const idleNameNotes = Array.isArray(snekMessageData.idleNameNotes) && snekMessageData.idleNameNotes.length
+    ? snekMessageData.idleNameNotes
+    : [
+      "Type a name first. Anonymous failure has no legacy.",
+      "Name your snake. We need someone to blame cleanly.",
+      "No name, no run, no excuses. Pick one.",
+      "Enter a name. The wall wants a target.",
+    ];
+  const nameRoastPools = snekMessageData.name || fallbackNamePools;
+  const deathRoastPools = snekMessageData.death || fallbackDeathPools;
+  const highScoreRoastPools = snekMessageData.highScore || fallbackHighScorePools;
+  const messageClassification = snekMessageData.classification || fallbackClassification;
+  const defaultishNames = new Set((Array.isArray(messageClassification.defaultishNames) ? messageClassification.defaultishNames : fallbackClassification.defaultishNames)
+    .map((value) => String(value || "").toLowerCase())
+    .filter(Boolean));
+  const edgyTokens = (Array.isArray(messageClassification.edgyTokens) ? messageClassification.edgyTokens : fallbackClassification.edgyTokens)
+    .map((value) => String(value || "").toLowerCase())
+    .filter(Boolean);
   const BASE_MS = 132;
   const SPEEDUP_EVERY = 6;
   const SPEED_FACTOR = 0.96;
@@ -509,6 +255,37 @@ async function initSnakeGame() {
     return String(template || "").replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
   }
 
+  function readPoolLines(pool, key) {
+    if (!pool || !key || !Array.isArray(pool[key])) return [];
+    return pool[key].filter(Boolean);
+  }
+
+  function collectPoolLines(pool, keys, fallbackKeys = ["general"]) {
+    const collected = [];
+    const seen = new Set();
+
+    keys.forEach((key) => {
+      readPoolLines(pool, key).forEach((line) => {
+        if (seen.has(line)) return;
+        seen.add(line);
+        collected.push(line);
+      });
+    });
+
+    if (!collected.length && fallbackKeys.length) {
+      fallbackKeys.forEach((key) => {
+        readPoolLines(pool, key).forEach((line) => {
+          if (seen.has(line)) return;
+          seen.add(line);
+          collected.push(line);
+        });
+      });
+    }
+
+    if (collected.length) return collected;
+    return fallbackKeys.length ? fallbackMessage : [];
+  }
+
   function classifyScoreBracket(rawScore) {
     const scoreValue = Number(rawScore) || 0;
     if (scoreValue <= 3) return "awful";
@@ -518,72 +295,173 @@ async function initSnakeGame() {
     return "elite";
   }
 
-  function classifyImprovementTier(rawDelta) {
+  function classifyImprovementTier(rawDelta, oldBestScore = 0) {
     const delta = Math.max(0, Number(rawDelta) || 0);
-    if (delta <= 2) return "tiny";
-    if (delta <= 7) return "moderate";
-    if (delta <= 18) return "big";
+    const baseline = Math.max(1, Number(oldBestScore) || 0);
+    const tinyLimit = Math.max(2, Math.floor(baseline * 0.08));
+    const moderateLimit = Math.max(7, Math.floor(baseline * 0.35));
+    const bigLimit = Math.max(18, Math.floor(baseline * 0.75));
+
+    if (delta <= tinyLimit) return "tiny";
+    if (delta <= moderateLimit) return "moderate";
+    if (delta <= bigLimit) return "big";
     return "absurd";
+  }
+
+  function classifyDeathFlavor(finalScore) {
+    const scoreValue = Math.max(0, Number(finalScore) || 0);
+    const improvement = scoreValue - Math.max(0, Number(runStartingBest) || 0);
+    if (scoreValue <= 2) return "instant";
+    if (scoreValue >= 18 && improvement >= 8) return "choke";
+    if (scoreValue >= 45) return "choke";
+    return "normal";
+  }
+
+  function isDefaultishName(normalizedName) {
+    if (!normalizedName) return false;
+    if (defaultishNames.has(normalizedName)) return true;
+
+    for (const alias of defaultishNames) {
+      if (normalizedName.startsWith(alias) && normalizedName.length <= alias.length + 3) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function hasAlternatingCase(rawName) {
+    const lettersOnly = String(rawName || "").replace(/[^a-zA-Z]/g, "");
+    if (lettersOnly.length < 6) return false;
+    return /(?:[a-z][A-Z]|[A-Z][a-z]){3,}/.test(lettersOnly);
+  }
+
+  function isLeetTryhard(rawName) {
+    const value = String(rawName || "");
+    return /[A-Za-z]/.test(value) && /[4301$!7]/.test(value);
+  }
+
+  function hasEdgyToken(loweredName) {
+    if (!loweredName) return false;
+    return edgyTokens.some((token) => loweredName.includes(token));
   }
 
   function classifyNameProfile(rawName) {
     const name = String(rawName || "");
     const compact = name.replace(/[\s_-]/g, "");
     const lowered = compact.toLowerCase();
+    const normalized = lowered.replace(/[^a-z0-9]/g, "");
     const letters = lowered.replace(/[^a-z]/g, "");
     const digits = (lowered.match(/[0-9]/g) || []).length;
     const vowels = (letters.match(/[aeiou]/g) || []).length;
-    const defaultishSet = new Set([
-      "guest",
-      "player",
-      "user",
-      "anon",
-      "anonymous",
-      "default",
-      "newplayer",
-      "snake",
-      "snek",
-      "test",
-      "admin",
-      "name",
-    ]);
+    const uniqueLetters = letters.length ? (new Set(letters.split("")).size / letters.length) : 0;
     const repeated = /(.)\1{2,}/i.test(name);
-    const edgy = /(dark|death|doom|killer|slayer|reaper|rage|blood|demon|devil|grim|void|shadow|night|war|lord|king|666|xx+)/i.test(lowered);
+    const edgy = hasEdgyToken(lowered);
     const allCaps = /[A-Z]/.test(name) && name === name.toUpperCase();
     const mostlyNumbers = compact.length >= 3 && (digits / Math.max(compact.length, 1)) >= 0.6;
     const keyboardSmash =
       letters.length >= 5 &&
-      (vowels / letters.length) < 0.22 &&
-      (new Set(letters.split("")).size / letters.length) > 0.58;
-    const shortName = compact.length > 0 && compact.length <= 3;
-    const longName = compact.length >= 13;
-    const defaultish = defaultishSet.has(lowered);
+      (vowels / letters.length) < 0.24 &&
+      uniqueLetters > 0.58 &&
+      !repeated;
+    const tinyName = compact.length > 0 && compact.length <= 2;
+    const shortName = compact.length > 0 && compact.length <= 4;
+    const longName = compact.length >= 12;
+    const veryLongName = compact.length >= 15;
+    const defaultish = isDefaultishName(normalized);
+    const tryhard = !mostlyNumbers && (hasAlternatingCase(name) || isLeetTryhard(name));
 
     let primary = "general";
     if (defaultish) primary = "defaultish";
+    else if (tinyName) primary = "tiny";
     else if (mostlyNumbers) primary = "numeric";
     else if (allCaps) primary = "allcaps";
     else if (keyboardSmash) primary = "smash";
     else if (repeated) primary = "repeated";
     else if (edgy) primary = "edgy";
-    else if (shortName) primary = "short";
+    else if (tryhard) primary = "tryhard";
+    else if (veryLongName) primary = "verylong";
     else if (longName) primary = "long";
+    else if (shortName) primary = "short";
 
-    const categories = [primary];
-    if (primary !== "allcaps" && allCaps) categories.push("allcaps");
-    if (primary !== "numeric" && mostlyNumbers) categories.push("numeric");
-    if (primary !== "smash" && keyboardSmash) categories.push("smash");
-    if (primary !== "repeated" && repeated) categories.push("repeated");
-    if (primary !== "edgy" && edgy) categories.push("edgy");
-    if (primary !== "short" && shortName) categories.push("short");
-    if (primary !== "long" && longName) categories.push("long");
-    if (!categories.includes("general")) categories.push("general");
+    const categories = [];
+    const pushCategory = (category) => {
+      if (category && !categories.includes(category)) {
+        categories.push(category);
+      }
+    };
+
+    pushCategory(primary);
+    if (tinyName) pushCategory("tiny");
+    if (shortName) pushCategory("short");
+    if (longName) pushCategory("long");
+    if (veryLongName) pushCategory("verylong");
+    if (allCaps) pushCategory("allcaps");
+    if (mostlyNumbers) pushCategory("numeric");
+    if (keyboardSmash) pushCategory("smash");
+    if (repeated) pushCategory("repeated");
+    if (edgy) pushCategory("edgy");
+    if (tryhard) pushCategory("tryhard");
+    pushCategory("general");
 
     return { categories };
   }
 
   function currentPlayerName() {
     return activeName || sanitizeName(playerEl.textContent || "", "Guest");
+  }
+
+  function showNameRoast(name, source = "live") {
+    const resolvedName = sanitizeName(name || "", "");
+    if (!resolvedName) return;
+
+    const sourcePools = source === "saved" ? (nameRoastPools.saved || {}) : (nameRoastPools.live || {});
+    const profile = classifyNameProfile(resolvedName);
+    const pool = collectPoolLines(sourcePools, profile.categories, ["general"]);
+    const template = pickMessage(`name-${source}`, pool);
+    if (!template) return;
+    setNameNote(fillRoast(template, { name: resolvedName }), false);
+  }
+
+  function showDeathRoast(cause = "generic", finalScore = score) {
+    const scoreBracket = classifyScoreBracket(finalScore);
+    const deathFlavor = classifyDeathFlavor(finalScore);
+    const causePools = deathRoastPools[cause] || deathRoastPools.generic || {};
+    const genericPools = deathRoastPools.generic || {};
+    const keys = deathFlavor === "normal" ? [scoreBracket] : [deathFlavor, scoreBracket];
+    const pool = Array.from(new Set([
+      ...collectPoolLines(causePools, keys, []),
+      ...collectPoolLines(genericPools, keys, ["mid"]),
+    ]));
+    const template = pickMessage(`death-${cause}-${deathFlavor}-${scoreBracket}`, pool);
+    if (!template) return;
+
+    setNameNote(fillRoast(template, {
+      name: currentPlayerName(),
+      score: finalScore,
+    }), true);
+  }
+
+  function showHighScoreRoast(newBestScore, oldBestScore) {
+    const normalizedNewBest = Number(newBestScore) || 0;
+    const normalizedOldBest = Number(oldBestScore) || 0;
+    const delta = Math.max(0, normalizedNewBest - normalizedOldBest);
+    const improvementTier = classifyImprovementTier(delta, normalizedOldBest);
+    const scoreBracket = classifyScoreBracket(normalizedNewBest);
+    const tierPools = highScoreRoastPools[improvementTier] || highScoreRoastPools.tiny || {};
+    const basePool = collectPoolLines(tierPools, [scoreBracket], ["mid"]);
+    const specialPool = (normalizedOldBest <= 0 && highScoreRoastPools.special && Array.isArray(highScoreRoastPools.special.first))
+      ? highScoreRoastPools.special.first.filter(Boolean)
+      : [];
+    const pool = Array.from(new Set([...specialPool, ...basePool]));
+    const template = pickMessage(`highscore-${improvementTier}-${scoreBracket}`, pool);
+    if (!template) return;
+
+    setNameNote(fillRoast(template, {
+      name: currentPlayerName(),
+      score: normalizedNewBest,
+      oldBest: normalizedOldBest,
+      delta,
+    }), false);
   }
 
   function getVisibleTopBestForName(name) {
@@ -624,50 +502,6 @@ async function initSnakeGame() {
     }
     syncBestDisplay();
     return resolved;
-  }
-
-  function showNameRoast(name, source = "live") {
-    const resolvedName = sanitizeName(name || "", "");
-    if (!resolvedName) return;
-
-    const sourcePools = source === "saved" ? nameRoastPools.saved : nameRoastPools.live;
-    const profile = classifyNameProfile(resolvedName);
-    const lines = profile.categories
-      .flatMap((category) => sourcePools[category] || [])
-      .filter(Boolean);
-    const pool = lines.length ? lines : (sourcePools.general || []);
-    const template = pickMessage(`name-${source}`, pool);
-    if (!template) return;
-    setNameNote(fillRoast(template, { name: resolvedName }), false);
-  }
-
-  function showDeathRoast(cause = "generic", finalScore = score) {
-    const scoreBracket = classifyScoreBracket(finalScore);
-    const causePools = deathRoastPools[cause] || deathRoastPools.generic;
-    const pool = causePools[scoreBracket] || deathRoastPools.generic[scoreBracket] || deathRoastPools.generic.mid;
-    const template = pickMessage(`death-${cause}`, pool);
-    if (!template) return;
-    setNameNote(fillRoast(template, {
-      name: currentPlayerName(),
-      score: finalScore,
-    }), true);
-  }
-
-  function showHighScoreRoast(newBestScore, oldBestScore) {
-    const delta = Math.max(0, (Number(newBestScore) || 0) - (Number(oldBestScore) || 0));
-    const improvementTier = classifyImprovementTier(delta);
-    const scoreBracket = classifyScoreBracket(newBestScore);
-    const tierPools = highScoreRoastPools[improvementTier] || highScoreRoastPools.tiny;
-    const pool = tierPools[scoreBracket] || tierPools.mid || highScoreRoastPools.tiny.mid;
-    const template = pickMessage(`highscore-${improvementTier}`, pool);
-    if (!template) return;
-
-    setNameNote(fillRoast(template, {
-      name: currentPlayerName(),
-      score: Number(newBestScore) || 0,
-      oldBest: Number(oldBestScore) || 0,
-      delta,
-    }), false);
   }
 
   function updateGameplayBackgroundFps() {
@@ -816,7 +650,7 @@ async function initSnakeGame() {
     syncBestDisplay();
 
     if (!running || score <= runStartingBest) return;
-    const nextTier = classifyImprovementTier(score - runStartingBest);
+    const nextTier = classifyImprovementTier(score - runStartingBest, runStartingBest);
     if (nextTier !== runHighScoreTier) {
       runHighScoreTier = nextTier;
       showHighScoreRoast(score, runStartingBest);

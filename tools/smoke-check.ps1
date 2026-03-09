@@ -63,6 +63,8 @@ $requiredFiles = @(
   "css/snek.css",
   "js/core.js",
   "js/starfield.js",
+  "js/data/hero-lines.js",
+  "js/data/snek-messages.js",
   "js/rotating-text.js",
   "js/snek.js"
 )
@@ -76,16 +78,20 @@ foreach ($page in $sharedPages) {
   Assert-Contains $page '<link rel="stylesheet" href="/css/base\.css">' "missing base.css include"
   Assert-Contains $page '<link rel="stylesheet" href="/css/site\.css">' "missing site.css include"
   Assert-Contains $page '<script src="/js/starfield\.js" defer></script>' "missing starfield.js include"
+  Assert-Contains $page '<script src="/js/data/hero-lines\.js" defer></script>' "missing hero-lines.js include"
   Assert-Contains $page '<script src="/js/rotating-text\.js" defer></script>' "missing rotating-text.js include"
   Assert-Contains $page '<script src="/js/core\.js" defer></script>' "missing core.js include"
   Assert-NotContains $page '<script src="/js/snek\.js" defer></script>' "should not include snek.js"
+  Assert-NotContains $page '<script src="/js/data/snek-messages\.js" defer></script>' "should not include snek-messages.js"
 }
 
 Assert-Contains "snek/index.html" '<link rel="stylesheet" href="/css/base\.css">' "missing base.css include"
 Assert-Contains "snek/index.html" '<link rel="stylesheet" href="/css/site\.css">' "missing site.css include"
 Assert-Contains "snek/index.html" '<link rel="stylesheet" href="/css/snek\.css">' "missing snek.css include"
 Assert-Contains "snek/index.html" '<script src="/js/starfield\.js" defer></script>' "missing starfield.js include"
+Assert-Contains "snek/index.html" '<script src="/js/data/hero-lines\.js" defer></script>' "missing hero-lines.js include"
 Assert-Contains "snek/index.html" '<script src="/js/rotating-text\.js" defer></script>' "missing rotating-text.js include"
+Assert-Contains "snek/index.html" '<script src="/js/data/snek-messages\.js" defer></script>' "missing snek-messages.js include"
 Assert-Contains "snek/index.html" '<script src="/js/snek\.js" defer></script>' "missing snek.js include"
 Assert-Contains "snek/index.html" '<script src="/js/core\.js" defer></script>' "missing core.js include"
 
